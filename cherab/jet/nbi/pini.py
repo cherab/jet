@@ -23,10 +23,11 @@ from raysect.core import Point3D, Vector3D, translate, rotate_basis
 # from raysect.core.scenegraph.node import Node
 from raysect.core import Node
 
-
 from cherab.openadas import OpenADAS
 from cherab.core.atomic.elements import deuterium
 from cherab.core import Beam
+
+from .idl_pini_geometry import get_pini_alignment
 
 
 EDGE_WIDENING = 0.01
@@ -282,8 +283,7 @@ def load_pini_from_ppf(shot, pini_id, plasma, attenuation_instructions, emission
     # Load pini geometry from Carine's IDL routines
 
     # TODO - need to load pini geometry from a central location
-    # pini_geometry = (origin, direction, divergence, 0.0, pini_length)
-    pini_geometry = get_ks5_pini_alignment(shot, int(pini_index))
+    pini_geometry = get_pini_alignment(shot, int(pini_index))
 
     ########################################################
     # Load pini parameters from PPF -> assemble output tuple
