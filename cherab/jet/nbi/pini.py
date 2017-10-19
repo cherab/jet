@@ -108,8 +108,8 @@ class JETPini(Node):
     :param tuple pini_geometry: a tuple containing:
         * the source (Point3D),
         * the direction (Vector3D),
-        * the divergence (tuple of two angles in degrees, horizontal then vertical),
-        * the initial width (float in meters) and
+        * the divergence (Divergence of beam sigma, tuple of two angles in degrees, horizontal then vertical),
+        * the initial width (Gaussian beam sigma, in meters)
         * the length (float in meters)
     of the PINI.
     :param tuple pini_parameters: a tuple containing:
@@ -119,8 +119,6 @@ class JETPini(Node):
         * the species
     of the PINI.
     :param Plasma plasma:
-    :param attenuation_instructions:
-    :param emission_instructions:
     :param parent: the scenegraph parent, default is None.
     :param name:
     """
@@ -158,10 +156,10 @@ class JETPini(Node):
             beam.power = power_fractions[comp_nb - 1]
             beam.element = element
             # 1/e width is converted in standard deviation, assuming a gaussian shape.
-            beam.sigma = initial_width / (2 * np.sqrt(2))
+            beam.sigma = initial_width
             # 1/e width divergences are converted in standard deviation divergences, assuming a gaussian shape.
-            beam.divergence_x = np.arctan(np.tan(divergence[0]*np.pi/180.)/np.sqrt(2))
-            beam.divergence_y = np.arctan(np.tan(divergence[1]*np.pi/180.)/np.sqrt(2))
+            beam.divergence_x = divergence[0]
+            beam.divergence_y = divergence[1]
             beam.length = length
             beam.attenuator = attenuator
             beam.models = emission_models
@@ -279,9 +277,12 @@ def load_pini_from_ppf(shot, pini_id, plasma, atomic_data, attenuator, emission_
     # TODO - check whether inital width is one side of the Gaussian or full width.
     # Code below implies this is the full width, not the half.
     initial_width = initial_width / (2 * np.sqrt(2))
+
     # 1/e width divergences are converted in standard deviation divergences, assuming a gaussian shape.
-    divergence = (np.rad2deg(np.arctan(np.tan(np.deg2rad(divergence[0]))/np.sqrt(2))),
-                  np.rad2deg(np.arctan(np.tan(np.deg2rad(divergence[1]))/np.sqrt(2))))
+    divergence = (
+        np.rad2deg(np.arctan(np.tan(np.deg2rad(divergence[0]))/np.sqrt(2))),
+        np.rad2deg(np.arctan(np.tan(np.deg2rad(divergence[1]))/np.sqrt(2)))
+    )
 
     print("beam geometry")
     print(source)
@@ -330,8 +331,6 @@ def load_debugging_pini(pini_id, plasma, atomic_data, attenuator, emission_model
 
     :param pini_id: Code for pini to load.
     :param Plasma plasma: Plasma this pini will use for attenuation and emission calculations.
-    :param attenuation_instructions:
-    :param emission_instructions:
     :param world:
     :return: Loaded JET pini from PPF.
     """
