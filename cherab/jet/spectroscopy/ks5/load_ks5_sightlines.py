@@ -50,8 +50,6 @@ def _setup_idl():
 
 def load_ks5_sightlines(pulse, spectrometer, parent=None):
 
-    print("running")
-
     if not pulse >= 76666:
         raise ValueError("Only shots >= 76666 are supported at this time.")
 
@@ -61,17 +59,12 @@ def load_ks5_sightlines(pulse, spectrometer, parent=None):
     import idlbridge as idl
     idl.execute('searchpath = !PATH')
 
-    print('loading idl')
     global _idl_was_setup
     if not _idl_was_setup:
-        print('seting up idl')
         _setup_idl()
         _idl_was_setup = True
-        print('idl setup')
 
-    print('executing idl')
     idl.execute("ret = get_ks5_alignment(pulse={}, spec='{}')".format(pulse, spectrometer))
-    print('finished idl')
 
     # Pull out data
     cg_align = idl.get("ret")
