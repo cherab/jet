@@ -125,8 +125,8 @@ class JETPini(Node):
     :param name:
     """
 
-    def __init__(self, pini_geometry, pini_parameters, plasma, attenuation_instructions,
-                 emission_instructions, parent=None, name=""):
+    def __init__(self, pini_geometry, pini_parameters, plasma, atomic_data, attenuator,
+                 emission_models, integration_step=0.02, parent=None, name=""):
 
         source, direction, divergence, initial_width, length = pini_geometry
         energy, power_fractions, self._turned_on_func, element = pini_parameters
@@ -148,37 +148,27 @@ class JETPini(Node):
                       transform=transform_pini,
                       name=name)
 
-        # TODO - perhaps this should implement a clone_instance() function to make it cleaner???
-        attenuation_model_class, attenuation_model_arg = attenuation_instructions
-
         # the 3 energy components are different beams
         for comp_nb in [1, 2, 3]:
 
-            # creation of the attenuation model
-            attenuation_model = attenuation_model_class(**attenuation_model_arg)
+            beam = Beam(parent=self, transform=translate(0., 0., 0.), name="Beam component {}".format(comp_nb))
+            beam.plasma = plasma
+            beam.atomic_data = atomic_data
+            beam.energy = energy / comp_nb
+            beam.power = power_fractions[comp_nb - 1]
+            beam.element = element
+            # 1/e width is converted in standard deviation, assuming a gaussian shape.
+            beam.sigma = initial_width / (2 * np.sqrt(2))
+            # 1/e width divergences are converted in standard deviation divergences, assuming a gaussian shape.
+            beam.divergence_x = np.arctan(np.tan(divergence[0]*np.pi/180.)/np.sqrt(2))
+            beam.divergence_y = np.arctan(np.tan(divergence[1]*np.pi/180.)/np.sqrt(2))
+            beam.length = length
+            beam.attenuator = attenuator
+            beam.models = emission_models
+            beam.integrator.step = integration_step
+            beam.integrator.min_samples = 10
 
-            # creation of the emission models
-            emission_models = []
-            for (emission_model_class, argument_dictionary) in emission_instructions:
-                emission_models.append(emission_model_class(**argument_dictionary))
-
-            self._components.append(
-                Beam(plasma=plasma,
-                     energy=energy / comp_nb,
-                     power=power_fractions[comp_nb - 1],
-                     element=element,
-                     # 1/e width is converted in standard deviation, assuming a gaussian shape.
-                     sigma=initial_width / (2 * np.sqrt(2)),
-                     # 1/e width divergences are converted in standard deviation divergences, assuming a gaussian shape.
-                     divergence=(np.arctan(np.tan(divergence[0]*np.pi/180.)/np.sqrt(2)), np.arctan(np.tan(divergence[1]*np.pi/180.)/np.sqrt(2))),
-                     length=length,
-                     attenuation_model=attenuation_model,
-                     emission_models=emission_models,
-                     atomic_data=atomic_data,
-                     parent=self,
-                     transform=translate(0., 0., 0.),
-                     name="Beam component {}".format(comp_nb))
-            )
+            self._components.append(beam)
 
     @property
     def origin(self):
@@ -259,7 +249,7 @@ class JETPini(Node):
         return spectrum
 
 
-def load_pini_from_ppf(shot, pini_id, plasma, attenuation_instructions, emission_instructions, world):
+def load_pini_from_ppf(shot, pini_id, plasma, atomic_data, attenuator, emission_models, world, integration_step=0.02):
     """
     Create a new JETPini instance for given pini ID from the NBI PPF settings.
 
@@ -316,10 +306,10 @@ def load_pini_from_ppf(shot, pini_id, plasma, attenuation_instructions, emission
 
     # Construct JETPini and return
     return JETPini(pini_geometry, pini_parameters, plasma,
-                   attenuation_instructions, emission_instructions, parent=world)
+                   atomic_data, attenuator, emission_models, integration_step=integration_step, parent=world)
 
 
-def load_debugging_pini(pini_id, plasma, attenuation_instructions, emission_instructions, world):
+def load_debugging_pini(pini_id, plasma, atomic_data, attenuator, emission_models, world, integration_step=0.02):
     """
     Load a JET pini with preconfigured debugging settings.
 
@@ -350,7 +340,7 @@ def load_debugging_pini(pini_id, plasma, attenuation_instructions, emission_inst
 
     # Construct JETPini and return
     return JETPini(pini_geometry, pini_parameters, plasma,
-                   attenuation_instructions, emission_instructions, parent=world)
+                   atomic_data, attenuator, emission_models, integration_step=integration_step, parent=world)
 
 
 class TimeSeriesMask:
