@@ -100,7 +100,7 @@ def get_pini_alignment(pulse, oct8_pini):
     divergence = (div_u, div_v)
 
     # Minimal 1/e width (at the source) of the beam (scalar in meters)
-    initial_width = 0.0
+    initial_width = 0.001  # Approximate with 1mm as an effective point source.
 
     pini_length = PINI_LENGTHS[oct8_pini]
 

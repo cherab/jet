@@ -330,8 +330,9 @@ def load_debugging_pini(pini_id, plasma, atomic_data, attenuator, emission_model
     origin = OCTANT8_DEBUG_GEOMETRY[pid]['position']
     direction = OCTANT8_DEBUG_GEOMETRY[pid]['direction']
     divergence = (0.499995, 0.700488)
+    initial_width = 0.001  # Approximate with 1mm as an effective point source.
     pini_length = OCTANT8_DEBUG_GEOMETRY[pid]['length']
-    pini_geometry = (origin, direction, divergence, 0.0, pini_length)
+    pini_geometry = (origin, direction, divergence, initial_width, pini_length)
 
     energy = OCTANT8_DEBUG_ENERGIES[pid]['energy']
     power_fractions = OCTANT8_DEBUG_ENERGIES[pid]['powers']
