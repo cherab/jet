@@ -109,14 +109,10 @@ plasma.composition = [d_species, c6_species]
 
 print('Loading JET PINI configuration...')
 
-beam_attenuator = SingleRayAttenuator(clamp_to_zero=True)
-beam_emission_models = [BeamCXLine(Line(carbon, 5, (8, 7)))]
-
-# pini_8_1 = load_pini_from_ppf(PULSE, '8.1', plasma, adas, beam_attenuator, beam_emission_models, world)
-# pini_8_2 = load_pini_from_ppf(PULSE, '8.2', plasma, adas, beam_attenuator, beam_emission_models, world)
-# pini_8_5 = load_pini_from_ppf(PULSE, '8.5', plasma, adas, beam_attenuator, beam_emission_models, world)
-pini_8_6 = load_pini_from_ppf(PULSE, '8.6', plasma, adas, beam_attenuator, beam_emission_models, world)
-
+pini_8_1 = load_pini_from_ppf(PULSE, '8.1', plasma, adas, SingleRayAttenuator(clamp_to_zero=True), [BeamCXLine(Line(carbon, 5, (8, 7)))], world)
+pini_8_2 = load_pini_from_ppf(PULSE, '8.2', plasma, adas, SingleRayAttenuator(clamp_to_zero=True), [BeamCXLine(Line(carbon, 5, (8, 7)))], world)
+pini_8_5 = load_pini_from_ppf(PULSE, '8.5', plasma, adas, SingleRayAttenuator(clamp_to_zero=True), [BeamCXLine(Line(carbon, 5, (8, 7)))], world)
+pini_8_6 = load_pini_from_ppf(PULSE, '8.6', plasma, adas, SingleRayAttenuator(clamp_to_zero=True), [BeamCXLine(Line(carbon, 5, (8, 7)))], world)
 
 # ############################### OBSERVATION ############################### #
 print('Observation')
@@ -126,7 +122,7 @@ direction = Vector3D(-0.760612, -0.648906, -0.0197396).normalise()
 up = Vector3D(0, 0, 1)
 
 camera = PinholeCamera((512, 512), fov=45, parent=world, transform=translate(los.x, los.y, los.z) * rotate_basis(direction, up))
-camera.render_engine = SerialEngine()
+# camera.render_engine = SerialEngine()
 camera.pixel_samples = 1
 camera.spectral_bins = 15
 
