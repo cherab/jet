@@ -14,3 +14,6 @@
 #
 # See the Licence for the specific language governing permissions and limitations
 # under the Licence.
+
+from .cad_files import *
+from .wall_outline import *

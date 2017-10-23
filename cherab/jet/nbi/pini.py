@@ -125,8 +125,8 @@ class JETPini(Node):
     :param name:
     """
 
-    def __init__(self, pini_geometry, pini_parameters, plasma, atomic_data, attenuator,
-                 emission_models, integration_step=0.02, parent=None, name=""):
+    def __init__(self, pini_geometry, pini_parameters, plasma, atomic_data, attenuation_instructions,
+                 emission_instructions, integration_step=0.02, parent=None, name=""):
 
         source, direction, divergence, initial_width, length = pini_geometry
         energy, power_fractions, self._turned_on_func, element = pini_parameters
@@ -148,8 +148,19 @@ class JETPini(Node):
                       transform=transform_pini,
                       name=name)
 
+        attenuation_model_class, attenuation_model_arg = attenuation_instructions
+
         # the 3 energy components are different beams
         for comp_nb in [1, 2, 3]:
+
+            # creation of the attenuation model
+            # Note that each beamlet needs its own attenuation class instance.
+            attenuation_model = attenuation_model_class(**attenuation_model_arg)
+
+            # creation of the emission models
+            emission_models = []
+            for (emission_model_class, argument_dictionary) in emission_instructions:
+                emission_models.append(emission_model_class(**argument_dictionary))
 
             beam = Beam(parent=self, transform=translate(0., 0., 0.), name="Beam component {}".format(comp_nb))
             beam.plasma = plasma
@@ -157,13 +168,11 @@ class JETPini(Node):
             beam.energy = energy / comp_nb
             beam.power = power_fractions[comp_nb - 1]
             beam.element = element
-            # 1/e width is converted in standard deviation, assuming a gaussian shape.
-            beam.sigma = initial_width / (2 * np.sqrt(2))
-            # 1/e width divergences are converted in standard deviation divergences, assuming a gaussian shape.
-            beam.divergence_x = np.arctan(np.tan(divergence[0]*np.pi/180.)/np.sqrt(2))
-            beam.divergence_y = np.arctan(np.tan(divergence[1]*np.pi/180.)/np.sqrt(2))
+            beam.sigma = initial_width
+            beam.divergence_x = divergence[0]
+            beam.divergence_y = divergence[1]
             beam.length = length
-            beam.attenuator = attenuator
+            beam.attenuator = attenuation_model
             beam.models = emission_models
             beam.integrator.step = integration_step
             beam.integrator.min_samples = 10
@@ -249,7 +258,8 @@ class JETPini(Node):
         return spectrum
 
 
-def load_pini_from_ppf(shot, pini_id, plasma, atomic_data, attenuator, emission_models, world, integration_step=0.02):
+def load_pini_from_ppf(shot, pini_id, plasma, atomic_data, attenuation_instructions, emission_instructions,
+                       world, integration_step=0.02):
     """
     Create a new JETPini instance for given pini ID from the NBI PPF settings.
 
@@ -283,11 +293,6 @@ def load_pini_from_ppf(shot, pini_id, plasma, atomic_data, attenuator, emission_
     divergence = (np.rad2deg(np.arctan(np.tan(np.deg2rad(divergence[0]))/np.sqrt(2))),
                   np.rad2deg(np.arctan(np.tan(np.deg2rad(divergence[1]))/np.sqrt(2))))
 
-    print("beam geometry")
-    print(source)
-    print(direction)
-    print(initial_width, divergence)
-
     pini_geometry = source, direction, divergence, initial_width, length
 
     ########################################################
@@ -320,8 +325,8 @@ def load_pini_from_ppf(shot, pini_id, plasma, atomic_data, attenuator, emission_
     pini_parameters = (energy, power_fractions, turned_on, deuterium)
 
     # Construct JETPini and return
-    return JETPini(pini_geometry, pini_parameters, plasma,
-                   atomic_data, attenuator, emission_models, integration_step=integration_step, parent=world)
+    return JETPini(pini_geometry, pini_parameters, plasma, atomic_data, attenuation_instructions,
+                   emission_instructions, integration_step=integration_step, parent=world)
 
 
 def load_debugging_pini(pini_id, plasma, atomic_data, attenuator, emission_models, world, integration_step=0.02):

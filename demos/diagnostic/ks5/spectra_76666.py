@@ -16,6 +16,8 @@
 # under the Licence.
 
 # External imports
+import matplotlib.pyplot as plt
+plt.ion()
 import numpy as np
 from scipy.constants import electron_mass, atomic_mass
 from jet.data import sal
@@ -50,6 +52,7 @@ equil_time_slice = equilibrium.time(TIME)
 psin_2d = equil_time_slice.psi_normalised
 psin_3d = AxisymmetricMapper(equil_time_slice.psi_normalised)
 inside_lcfs = equil_time_slice.inside_lcfs
+inside_lcfs_3d = AxisymmetricMapper(equil_time_slice.inside_lcfs)
 
 
 # ########################### PLASMA CONFIGURATION ########################## #
@@ -99,18 +102,17 @@ plasma.electron_distribution = e_distribution
 plasma.composition = [d_species, c6_species]
 
 
-
 # ########################### NBI CONFIGURATION ############################# #
 
 print('Loading JET PINI configuration...')
 
-beam_attenuator = SingleRayAttenuator(clamp_to_zero=True)
-beam_emission_models = [BeamCXLine(Line(carbon, 5, (8, 7)))]
+attenuation_instructions = (SingleRayAttenuator, {'clamp_to_zero': True})
+beam_emission_instructions = [(BeamCXLine, {'line': Line(carbon, 5, (8, 7))})]
 
-pini_8_1 = load_pini_from_ppf(PULSE, '8.1', plasma, adas, beam_attenuator, beam_emission_models, world)
-pini_8_2 = load_pini_from_ppf(PULSE, '8.2', plasma, adas, beam_attenuator, beam_emission_models, world)
-pini_8_5 = load_pini_from_ppf(PULSE, '8.5', plasma, adas, beam_attenuator, beam_emission_models, world)
-pini_8_6 = load_pini_from_ppf(PULSE, '8.6', plasma, adas, beam_attenuator, beam_emission_models, world)
+pini_8_1 = load_pini_from_ppf(PULSE, '8.1', plasma, adas, attenuation_instructions, beam_emission_instructions, world)
+pini_8_2 = load_pini_from_ppf(PULSE, '8.2', plasma, adas, attenuation_instructions, beam_emission_instructions, world)
+pini_8_5 = load_pini_from_ppf(PULSE, '8.5', plasma, adas, attenuation_instructions, beam_emission_instructions, world)
+pini_8_6 = load_pini_from_ppf(PULSE, '8.6', plasma, adas, attenuation_instructions, beam_emission_instructions, world)
 
 
 # ############################### OBSERVATION ############################### #
@@ -120,4 +122,37 @@ ks5c = load_ks5_sightlines(PULSE, 'ks5c', parent=world)
 
 ks5c.observe()
 
+observed_radiance = []
+for sightline in ks5c.sight_lines:
+    observed_radiance.append(sightline.observed_spectrum.total())
+plt.figure()
+plt.plot(observed_radiance)
+plt.xlabel('Sight-line index')
+plt.ylabel('Observed Radiance')
+plt.title('Radiance across KS5C sight-lines')
 
+
+length = []
+full_energy = []
+half_energy = []
+third_energy = []
+t_span = np.linspace(10, 16, 500)
+for t in t_span:
+    sample_point = pini_8_6.origin + pini_8_6.direction * t
+    if inside_lcfs_3d(sample_point.x, sample_point.y, sample_point.z):
+        local_point = sample_point.transform(pini_8_6.to_local())
+        try:
+            full_energy.append(pini_8_6.components[0].density(local_point.x, local_point.y, local_point.z))
+            half_energy.append(pini_8_6.components[1].density(local_point.x, local_point.y, local_point.z))
+            third_energy.append(pini_8_6.components[2].density(local_point.x, local_point.y, local_point.z))
+            length.append(t)
+        except ValueError:
+            continue
+plt.figure()
+plt.plot(length, full_energy, label='full energy')
+plt.plot(length, half_energy, label='half energy')
+plt.plot(length, third_energy, label='third energy')
+plt.xlabel('Distance along beam line (m)')
+plt.ylabel('Beam component density')
+plt.legend()
+plt.title('Attenuation of beam components')
