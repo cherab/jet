@@ -108,8 +108,8 @@ class JETPini(Node):
     :param tuple pini_geometry: a tuple containing:
         * the source (Point3D),
         * the direction (Vector3D),
-        * the divergence (tuple of two angles in degrees, horizontal then vertical),
-        * the initial width (float in meters) and
+        * the divergence (Divergence of beam sigma, tuple of two angles in degrees, horizontal then vertical),
+        * the initial width (Gaussian beam sigma, in meters)
         * the length (float in meters)
     of the PINI.
     :param tuple pini_parameters: a tuple containing:
