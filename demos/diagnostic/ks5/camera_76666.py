@@ -22,9 +22,9 @@ import numpy as np
 from scipy.constants import electron_mass, atomic_mass
 from jet.data import sal
 from raysect.core import Point3D, Vector3D, translate, rotate_basis
-from raysect.core.workflow import SerialEngine
 from raysect.optical import World
 from raysect.optical.observer import PinholeCamera
+from raysect.optical.material import AbsorbingSurface
 
 # Internal imports
 from cherab.core.math import Interpolate1DCubic, IsoMapper2D, IsoMapper3D, AxisymmetricMapper, Blend2D, Constant2D, \
@@ -35,7 +35,7 @@ from cherab.core.model import SingleRayAttenuator, BeamCXLine
 from cherab.openadas import OpenADAS
 from cherab.jet.nbi import load_pini_from_ppf
 from cherab.jet.equilibrium import JETEquilibrium
-from cherab.jet.spectroscopy.ks5 import load_ks5_sightlines
+from cherab.jet.machine import import_jet_mesh
 
 
 PULSE = 79666
@@ -45,6 +45,8 @@ TIME = 61.0
 world = World()
 
 adas = OpenADAS(permit_extrapolation=True)  # create atomic data source
+
+import_jet_mesh(world)
 
 
 # ########################### PLASMA EQUILIBRIUM ############################ #
@@ -104,18 +106,18 @@ plasma.electron_distribution = e_distribution
 plasma.composition = [d_species, c6_species]
 
 
-
 # ########################### NBI CONFIGURATION ############################# #
 
 print('Loading JET PINI configuration...')
 
-beam_attenuator = SingleRayAttenuator(clamp_to_zero=True)
-beam_emission_models = [BeamCXLine(Line(carbon, 5, (8, 7)))]
+attenuation_instructions = (SingleRayAttenuator, {'clamp_to_zero': True})
 
-# pini_8_1 = load_pini_from_ppf(PULSE, '8.1', plasma, adas, beam_attenuator, beam_emission_models, world)
-# pini_8_2 = load_pini_from_ppf(PULSE, '8.2', plasma, adas, beam_attenuator, beam_emission_models, world)
-# pini_8_5 = load_pini_from_ppf(PULSE, '8.5', plasma, adas, beam_attenuator, beam_emission_models, world)
-pini_8_6 = load_pini_from_ppf(PULSE, '8.6', plasma, adas, beam_attenuator, beam_emission_models, world)
+beam_emission_instructions = [(BeamCXLine, {'line': Line(carbon, 5, (8, 7))})]
+
+pini_8_1 = load_pini_from_ppf(PULSE, '8.1', plasma, adas, attenuation_instructions, beam_emission_instructions, world)
+pini_8_2 = load_pini_from_ppf(PULSE, '8.2', plasma, adas, attenuation_instructions, beam_emission_instructions, world)
+pini_8_5 = load_pini_from_ppf(PULSE, '8.5', plasma, adas, attenuation_instructions, beam_emission_instructions, world)
+pini_8_6 = load_pini_from_ppf(PULSE, '8.6', plasma, adas, attenuation_instructions, beam_emission_instructions, world)
 
 
 # ############################### OBSERVATION ############################### #
@@ -123,11 +125,11 @@ print('Observation')
 
 los = Point3D(4.22950, -0.791368, 0.269430)
 direction = Vector3D(-0.760612, -0.648906, -0.0197396).normalise()
+los = los + direction * 0.9
 up = Vector3D(0, 0, 1)
 
 camera = PinholeCamera((512, 512), fov=45, parent=world, transform=translate(los.x, los.y, los.z) * rotate_basis(direction, up))
-camera.render_engine = SerialEngine()
-camera.pixel_samples = 1
+camera.pixel_samples = 50
 camera.spectral_bins = 15
 
 camera.observe()
