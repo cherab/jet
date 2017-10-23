@@ -27,8 +27,11 @@ from raysect.optical.library.metal import RoughTungsten
 try:
     CADMESH_PATH = os.environ['CHERAB_CADMESH']
 except KeyError:
-    raise ValueError("CHERAB's CAD file path environment variable 'CHERAB_CADMESH' is"
-                     "not set.")
+    if os.path.isdir('/projects/cadmesh/'):
+        CADMESH_PATH = '/projects/cadmesh/'
+    else:
+        raise ValueError("CHERAB's CAD file path environment variable 'CHERAB_CADMESH' is"
+                         "not set.")
 
 
 METAL_PARTS = [
