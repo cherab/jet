@@ -16,3 +16,5 @@
 # under the Licence.
 
 from .load_ks5_sightlines import load_ks5_sightlines
+from .measured_data import JETMeasuredProfile
+from .load_jet_spectra import load_jet_spectra
