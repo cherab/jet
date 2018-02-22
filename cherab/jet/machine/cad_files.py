@@ -73,7 +73,7 @@ DARK_PARTS = [
     (os.path.join(CADMESH_PATH, 'jet/rsm/dark/PL_Structure.rsm'), Lambert(ConstantSF(0.25))),
     (os.path.join(CADMESH_PATH, 'jet/rsm/dark/SC_Feeds.rsm'), Lambert(ConstantSF(0.25))),
     (os.path.join(CADMESH_PATH, 'jet/rsm/dark/SC_Xover.rsm'), Lambert(ConstantSF(0.25))),
-    (os.path.join(CADMESH_PATH, 'jet/rsm/dark/Vessel Wall.rsm'), Lambert(ConstantSF(0.25))),
+    (os.path.join(CADMESH_PATH, 'jet/rsm/dark/Vacuum_vessel.rsm'), Lambert(ConstantSF(0.25))),
 ]
 
 
