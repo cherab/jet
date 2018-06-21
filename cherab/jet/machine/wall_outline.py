@@ -18,9 +18,12 @@
 import os
 import json
 import numpy as np
+import matplotlib.pyplot as plt
+
+from cherab.core.math.mask import PolygonMask2D
 
 
-def firstwall(pulse):
+def firstwall(pulse=92782):
     """
     Returns the coordinates of the JET first wall for the specified pulse.
 
@@ -28,7 +31,7 @@ def firstwall(pulse):
     :return: A Nx2 numpy array of coordinates or None if no data available.
     """
 
-    path = os.path.join(os.path.dirname(__file__), "jet_first_wall.json")
+    path = os.path.join(os.path.dirname(__file__), "first_wall.json")
 
     with open(path) as f:
         walls = json.load(f)
@@ -42,3 +45,22 @@ def firstwall(pulse):
             if pulse >= wall["start"]:
                 return np.array(wall["polygon"])
     return None
+
+
+def plot_jet_wall_outline(pulse=92782, style='k'):
+
+    outline = firstwall(pulse=pulse)
+    for i in range(outline.shape[0] - 1):
+        plt.plot([outline[i, 0], outline[i+1, 0]],
+                 [outline[i, 1], outline[i+1, 1]], style)
+    plt.axis('equal')
+
+
+def get_jet_wall_mask(pulse=92782):
+
+    return PolygonMask2D(firstwall(pulse=pulse))
+
+
+if __name__ == '__main__':
+    plot_jet_wall_outline()
+    plt.show()
