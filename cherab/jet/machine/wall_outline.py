@@ -57,8 +57,8 @@ def plot_jet_wall_outline(pulse=92782, style='k'):
 
 
 def get_jet_wall_mask(pulse=92782):
-
-    return PolygonMask2D(firstwall(pulse=pulse))
+    outline = firstwall(pulse=pulse)
+    return PolygonMask2D(outline[0:-1])
 
 
 if __name__ == '__main__':
