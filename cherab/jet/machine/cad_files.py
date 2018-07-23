@@ -36,11 +36,13 @@ except KeyError:
 
 tungsten_roughness = 0.2
 beryllium_roughness = 0.2
+lambertian_roughness = 0.25
 
 
 # Divertor Tiles
 
 DIV_TILE0 = [(os.path.join(CADMESH_PATH, 'jet/rsm/divertor/Tile0.rsm'), RoughTungsten(tungsten_roughness))]
+DIV_TILE1 = [(os.path.join(CADMESH_PATH, 'jet/rsm/divertor/Tile1.rsm'), RoughTungsten(tungsten_roughness))]
 DIV_TILE3 = [(os.path.join(CADMESH_PATH, 'jet/rsm/divertor/Tile3.rsm'), RoughTungsten(tungsten_roughness))]
 DIV_TILE4 = [(os.path.join(CADMESH_PATH, 'jet/rsm/divertor/Tile4.rsm'), RoughTungsten(tungsten_roughness))]
 DIV_TILE5_STACKA = [(os.path.join(CADMESH_PATH, 'jet/rsm/divertor/T5_StackA.rsm'), RoughTungsten(tungsten_roughness))]
@@ -54,7 +56,8 @@ DIV_TILE8 = [(os.path.join(CADMESH_PATH, 'jet/rsm/divertor/Tile8.rsm'), RoughTun
 DIV_TILE9 = [(os.path.join(CADMESH_PATH, 'jet/rsm/divertor/Tile9.rsm'), RoughTungsten(tungsten_roughness))]
 DIV_TILE10 = [(os.path.join(CADMESH_PATH, 'jet/rsm/divertor/Tile10.rsm'), RoughTungsten(tungsten_roughness))]
 
-DIVERTOR_TILES = DIV_TILE0 + DIV_TILE3 + DIV_TILE4 + DIV_TILE5 + DIV_TILE6 + DIV_TILE7 + DIV_TILE8 + DIV_TILE9 + DIV_TILE10
+DIVERTOR_TILES = DIV_TILE0 + DIV_TILE1+ DIV_TILE3 + DIV_TILE4 + DIV_TILE5 + DIV_TILE6 + \
+                 DIV_TILE7 + DIV_TILE8 + DIV_TILE9 + DIV_TILE10
 
 
 A2_ANTENNAS = [(os.path.join(CADMESH_PATH, 'jet/rsm/antennas/A2_Antennas.rsm'), RoughBeryllium(beryllium_roughness))]
@@ -307,8 +310,7 @@ IWGL_STRUCTURE = [(os.path.join(CADMESH_PATH, 'jet/rsm/IWGL_Structure.rsm'), Lam
 
 INNER_WALL_GUARD_LIMITERS = INNER_WALL_BERYLLIUM_GUARD_LIMITERS + INNER_WALL_TUNGSTEN_GUARD_LIMITERS + IWGL_CARRIERS + IWGL_STRUCTURE
 
-
-# INNER_WALL_CLADDING_TILES = [(os.path.join(CADMESH_PATH, 'jet/rsm/Cladding_Tiles.rsm'), RoughBeryllium(beryllium_roughness))]
+INNER_WALL_CLADDING_TILES = [(os.path.join(CADMESH_PATH, 'jet/rsm/IW_Cladding_Tiles.rsm'), RoughBeryllium(beryllium_roughness))]
 
 
 OPL_TILES = [
@@ -624,7 +626,7 @@ OPL_TILES = [
     (os.path.join(CADMESH_PATH, 'jet/rsm/OPL_Tiles_Be/w23.rsm'), RoughBeryllium(beryllium_roughness)),
 ]
 
-OPL_TILE_STRUCTURE = [(os.path.join(CADMESH_PATH, 'jet/rsm/OPL_Structure.rsm'), Lambert(ConstantSF(0.25)))]
+OPL_TILE_STRUCTURE = [(os.path.join(CADMESH_PATH, 'jet/rsm/OPL_Structure.rsm'), Lambert(ConstantSF(lambertian_roughness)))]
 
 UDP_TILES = [(os.path.join(CADMESH_PATH, 'jet/rsm/UDP_Tiles.rsm'), RoughBeryllium(beryllium_roughness))]
 
@@ -643,18 +645,21 @@ SC_XOVER = [(os.path.join(CADMESH_PATH, 'jet/rsm/SC_Xover.rsm'), RoughBeryllium(
 REION_PLATES = [(os.path.join(CADMESH_PATH, 'jet/rsm/REION_plates.rsm'), RoughTungsten(tungsten_roughness))]
 
 
-VACUUM_VESSEL = [(os.path.join(CADMESH_PATH, 'jet/rsm/Vacuum_vessel.rsm'), Lambert(ConstantSF(0.25)))]
+VACUUM_VESSEL = [(os.path.join(CADMESH_PATH, 'jet/rsm/Vacuum_vessel.rsm'), Lambert(ConstantSF(lambertian_roughness)))]
 
-DIAGNOSTICS = [(os.path.join(CADMESH_PATH, 'jet/rsm/Diagnostics.rsm'), Lambert(ConstantSF(0.25)))]
+DIAGNOSTICS = [(os.path.join(CADMESH_PATH, 'jet/rsm/Diagnostics.rsm'), Lambert(ConstantSF(lambertian_roughness)))]
 
-COOLING_MANIFOLD = [(os.path.join(CADMESH_PATH, 'jet/rsm/Cooling_Manifold.rsm'), Lambert(ConstantSF(0.25)))]
+COOLING_MANIFOLD = [(os.path.join(CADMESH_PATH, 'jet/rsm/Cooling_Manifold.rsm'), Lambert(ConstantSF(lambertian_roughness)))]
 
-IL_SC = [(os.path.join(CADMESH_PATH, 'jet/rsm/IL_SC.rsm'), Lambert(ConstantSF(0.25)))]
+IL_SC = [(os.path.join(CADMESH_PATH, 'jet/rsm/IL_SC.rsm'), Lambert(ConstantSF(lambertian_roughness)))]
+
+IL_SC_STRUCTURE = [(os.path.join(CADMESH_PATH, 'jet/rsm/IL_SC_Structure.rsm'), Lambert(ConstantSF(lambertian_roughness)))]
 
 
-JET_MESH = ANTENNAS + INNER_WALL_GUARD_LIMITERS + OPL_TILES + OPL_TILE_STRUCTURE + \
+# Complete JET mesh for first wall reflection calculations
+JET_MESH = ANTENNAS + INNER_WALL_GUARD_LIMITERS + INNER_WALL_CLADDING_TILES + OPL_TILES + OPL_TILE_STRUCTURE + \
            UDP_TILES + UO_SC + OL_SC + MUSHROOM_TILES + SAUSAGES + IL_SAUSAGES + SC_XOVER + REION_PLATES + \
-           VACUUM_VESSEL + DIAGNOSTICS + IL_SC + DIVERTOR_TILES
+           VACUUM_VESSEL + DIAGNOSTICS + IL_SC + IL_SC_STRUCTURE + DIVERTOR_TILES
 
 
 def import_jet_mesh(world, material=None):
