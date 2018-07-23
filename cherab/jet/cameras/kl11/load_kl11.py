@@ -5,9 +5,10 @@ from raysect.optical.observer import PowerPipeline2D, VectorCamera
 from cherab.tools.observers import load_calcam_calibration
 
 
-def load_kl11_camera(parent=None, pipelines=None):
+def load_kl11_camera(parent=None, pipelines=None, reduction_factor=1):
 
-    camera_config = load_calcam_calibration('/home/mcarr/cherab/cherab_jet/cherab/jet/cameras/kl11/KL11-E1DC_87516.nc')
+    camera_config = load_calcam_calibration('/home/mcarr/cherab/cherab_jet/cherab/jet/cameras/kl11/KL11-E1DC_87516.nc',
+                                            reduction_factor=reduction_factor)
 
     if not pipelines:
         power_unfiltered = PowerPipeline2D(display_unsaturated_fraction=0.96, name="Unfiltered Power (W)")
