@@ -662,18 +662,22 @@ JET_MESH = ANTENNAS + INNER_WALL_GUARD_LIMITERS + INNER_WALL_CLADDING_TILES + OP
            VACUUM_VESSEL + DIAGNOSTICS + IL_SC + IL_SC_STRUCTURE + DIVERTOR_TILES
 
 
-def import_jet_mesh(world, material=None):
+def import_jet_mesh(world, material=None, tungsten_material=None, beryllium_material=None):
 
     for mesh_item in JET_MESH:
 
         mesh_path, default_material = mesh_item
 
-        if not material:
+        if material:
+            pass
+        elif tungsten_material and isinstance(default_material, RoughTungsten):
+            material = tungsten_material
+        elif beryllium_material and isinstance(default_material, RoughBeryllium):
+            material = beryllium_material
+        else:
             material = default_material
 
         print("importing {}  ...".format(os.path.split(mesh_path)[1]))
         directory, filename = os.path.split(mesh_path)
         mesh_name, ext = filename.split('.')
         Mesh.from_file(mesh_path, parent=world, material=material, name=mesh_name)
-
-
