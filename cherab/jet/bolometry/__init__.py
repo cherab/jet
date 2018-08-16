@@ -1,1 +1,2 @@
-__author__ = 'mcarr'
+
+from .kb5 import load_KB5
