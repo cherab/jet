@@ -31,20 +31,20 @@ for i in range(32):
     p2 = Point3D(foil_data[4], foil_data[5], foil_data[6])
     p3 = Point3D(foil_data[7], foil_data[8], foil_data[9])
     p4 = Point3D(foil_data[10], foil_data[11], foil_data[12])
-    basis_x = p1.vector_to(p2).normalise()
+    basis_x = p2.vector_to(p1).normalise()  # switching orientation to ensure face orientation is correct
     dx = p1.distance_to(p2)
     basis_y = p2.vector_to(p3).normalise()
     dy = p2.distance_to(p3)
     centre_point = Point3D((p1.x + p2.x + p3.x + p4.x)/4, (p1.y + p2.y + p3.y + p4.y)/4, (p1.z + p2.z + p3.z + p4.z)/4)
 
-    # Shift backwards 3mm for all foils except those explicitely measured on back plate
+    # Shift backwards 3mm for all foils except those explicitly measured on back plate
     if i not in (25-1, 32-1):
         basis_z = basis_x.cross(basis_y).normalise()
-        centre_point = centre_point - basis_z * 0.0031
+        centre_point = centre_point - basis_z * 0.0032
 
     foil = BolometerFoil(foil_id, centre_point, basis_x, dx, basis_y, dy, slit)
 
     kb5vertical.add_foil_detector(foil)
 
-kb5vertical.save('KB5V_camera.json')
+kb5vertical.save('kb5v_camera.json')
 

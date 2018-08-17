@@ -681,3 +681,9 @@ def import_jet_mesh(world, material=None, tungsten_material=None, beryllium_mate
         directory, filename = os.path.split(mesh_path)
         mesh_name, ext = filename.split('.')
         Mesh.from_file(mesh_path, parent=world, material=material, name=mesh_name)
+
+
+###########################
+# DIAGNOSTICS
+
+KB5V = [(os.path.join(CADMESH_PATH, 'jet/rsm/diagnostics/KB5/KB5V/kb5v.obj'), RoughTungsten(tungsten_roughness))]
