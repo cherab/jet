@@ -7,10 +7,22 @@ from cherab.tools.observers.inversion_grid import load_inversion_grid
 _DATA_PATH = os.path.split(__file__)[0]
 
 
-def load_kb5_camera(camera_id, parent=None, inversion_grid=None):
+def load_kb5_camera(camera_id, parent=None, inversion_grid=None, extension='pickle'):
 
     if camera_id == 'KB5V':
-        config_filename = 'kb5v_camera.json'
+        if extension == 'pickle':
+            config_filename = 'kb5v_camera.pickle'
+        elif extension == 'json':
+            config_filename = 'kb5v_camera.json'
+        else:
+            raise ValueError("Unrecognised bolometer file extension '{}'.".format(extension))
+    elif camera_id == 'KB5H':
+        if extension == 'pickle':
+            config_filename = 'kb5h_camera.pickle'
+        elif extension == 'json':
+            config_filename = 'kb5h_camera.json'
+        else:
+            raise ValueError("Unrecognised bolometer file extension '{}'.".format(extension))
     else:
         raise ValueError("Unrecognised bolometer camera_id '{}'.".format(camera_id))
 

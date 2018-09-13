@@ -36,7 +36,7 @@ except KeyError:
 
 tungsten_roughness = 0.2
 beryllium_roughness = 0.2
-lambertian_roughness = 0.25
+lambertian_roughness = 0.1
 
 
 # Divertor Tiles
@@ -687,3 +687,4 @@ def import_jet_mesh(world, override_material=None, tungsten_material=None, beryl
 # DIAGNOSTICS
 
 KB5V = [(os.path.join(CADMESH_PATH, 'jet/rsm/diagnostics/KB5/KB5V/kb5v.obj'), RoughTungsten(tungsten_roughness))]
+KB5H = [(os.path.join(CADMESH_PATH, 'jet/rsm/diagnostics/KB5/KB5H/kb5h.obj'), RoughTungsten(tungsten_roughness))]
