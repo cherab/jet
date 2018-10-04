@@ -1,7 +1,7 @@
 
 import os
+import json
 import numpy as np
-import pickle
 from raysect.core import Point2D, Point3D, Vector3D
 
 from cherab.tools.observers.bolometry import BolometerCamera, BolometerSlit, BolometerFoil
@@ -79,21 +79,22 @@ def load_kb5_camera(camera_id, parent=None):
     return bolometer_camera
 
 
-def load_kb5_inversion_grid(parent=None, name=None):
+def load_kb5_voxel_grid(parent=None, name=None):
 
-    old_grid = load_inversion_grid(os.path.join(_DATA_PATH, "kb5_inversion_grid.json"))
+    directory = os.path.split(__file__)[0]
+    voxel_grid_file = os.path.join(directory, "kb5_voxel_grid.json")
 
-    cell_data = old_grid.cell_data
+    with open(voxel_grid_file, 'r') as fh:
+        grid_description = json.load(fh)
 
-    cell_coordinates = []
-    for cell_id in range(cell_data.shape[0]):
+    voxel_coordinates = []
+    for voxel in grid_description['cells']:
+        v1 = Point2D(voxel['p1'][0], voxel['p1'][1])
+        v2 = Point2D(voxel['p2'][0], voxel['p2'][1])
+        v3 = Point2D(voxel['p3'][0], voxel['p3'][1])
+        v4 = Point2D(voxel['p4'][0], voxel['p4'][1])
+        voxel_coordinates.append((v1, v2, v3, v4))
 
-        p1 = Point2D(cell_data[cell_id, 0, 0], cell_data[cell_id, 0, 1])
-        p2 = Point2D(cell_data[cell_id, 1, 0], cell_data[cell_id, 1, 1])
-        p3 = Point2D(cell_data[cell_id, 2, 0], cell_data[cell_id, 2, 1])
-        p4 = Point2D(cell_data[cell_id, 3, 0], cell_data[cell_id, 3, 1])
-        cell_coordinates.append((p1, p2, p3, p4))
+    voxel_grid = ToroidalVoxelGrid(voxel_coordinates, parent=parent, name=name)
 
-    new_grid = ToroidalVoxelGrid(cell_coordinates, parent=parent, name=name)
-
-    return new_grid
+    return voxel_grid
