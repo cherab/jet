@@ -109,14 +109,17 @@ class JETEquilibrium:
 
         # slice data for selected time point
         time = self.time_slices[index]
-        f_profile_psin = self._f.dimensions[1].data
-        f_profile_magnitude = self._f.data[index, :]
         psi_lcfs = self._psi_lcfs.data[index]
         psi_axis = self._psi_axis.data[index]
         axis_coord = Point2D(self._axis_coord_r.data[index], self._axis_coord_z.data[index])
         b_vacuum_magnitude = self._b_vacuum_magnitude.data[index]
         lcfs_poly_r = self._lcfs_poly_r.data[index, :]
         lcfs_poly_z = self._lcfs_poly_z.data[index, :]
+
+        # pack f_profile into a Nx2 array
+        f_profile = np.zeros((2, self._f.dimensions[1].length))
+        f_profile[0, :] = self._f.dimensions[1].data
+        f_profile[1, :] = self._f.data[index, :]
 
         # slice and reshape psi data for specified time point
         # the original data is 3D, packed into a 2D array, this must be reshaped
@@ -125,8 +128,8 @@ class JETEquilibrium:
         # convert raw lcfs poly coordinates into a polygon object
         lcfs_polygon = self._process_efit_lcfs_polygon(lcfs_poly_r, lcfs_poly_z)
 
-        return EFITEquilibrium(self._r, self._z, psi, psi_axis, psi_lcfs, axis_coord, f_profile_psin,
-                               f_profile_magnitude, B_VACUUM_RADIUS, b_vacuum_magnitude, lcfs_polygon, time)
+        return EFITEquilibrium(self._r, self._z, psi, psi_axis, psi_lcfs, axis_coord, f_profile,
+                               B_VACUUM_RADIUS, b_vacuum_magnitude, lcfs_polygon, time)
 
     @staticmethod
     def _find_nearest(array, value):
@@ -158,9 +161,9 @@ class JETEquilibrium:
         poly_z = poly_z[unique]
 
         # generate single array containing coordinates
-        poly_coords = np.zeros((len(poly_r), 2))
-        poly_coords[:, 0] = poly_r
-        poly_coords[:, 1] = poly_z
+        poly_coords = np.zeros((2, len(poly_r)))
+        poly_coords[0, :] = poly_r
+        poly_coords[1, :] = poly_z
 
         # magic number for vocel_coef from old code
         return poly_coords
