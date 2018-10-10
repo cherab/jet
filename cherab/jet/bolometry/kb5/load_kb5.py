@@ -10,7 +10,7 @@ from cherab.tools.inversions.voxels import ToroidalVoxelGrid
 
 _DATA_PATH = os.path.split(__file__)[0]
 
-# TODO: write a SAL data object for this data and modify this routine to use that object
+
 def load_kb5_camera(camera_id, parent=None):
 
     if camera_id == 'KB5V':
@@ -40,7 +40,6 @@ def load_kb5_camera(camera_id, parent=None):
         basis_y = p2.vector_to(p3).normalise()
         dy = p2.distance_to(p3)
         centre_point = Point3D((p1.x + p2.x + p3.x + p4.x)/4, (p1.y + p2.y + p3.y + p4.y)/4, (p1.z + p2.z + p3.z + p4.z)/4)
-        # todo: dx and dy are foil dimensions - width_x, width_y
         slit_objects[slit_id] = BolometerSlit(slit_id, centre_point, basis_x, dx, basis_y, dy, parent=bolometer_camera)
 
     for i in range(num_foils):
@@ -58,18 +57,19 @@ def load_kb5_camera(camera_id, parent=None):
         dy = p2.distance_to(p3)
         centre_point = Point3D((p1.x + p2.x + p3.x + p4.x)/4, (p1.y + p2.y + p3.y + p4.y)/4, (p1.z + p2.z + p3.z + p4.z)/4)
 
-        # todo: move this to the source data
         # Shift backwards 3mm for all foils except those explicitly measured on back plate
         if camera_id == "KB5V":
-            if i not in (9 - 1, 25 - 1, 32 - 1):
+            if i not in (9-1, 25-1, 32-1):
                 basis_z = basis_x.cross(basis_y).normalise()
                 centre_point = centre_point - basis_z * 0.0032
             # if i == 9 - 1:
             #     centre_point = centre_point + basis_x * 0.001
-            if i == 31 - 1:
+            if i == 31-1:
                 centre_point = centre_point - basis_x * 0.001
+        else:
+            basis_z = basis_x.cross(basis_y).normalise()
+            centre_point = centre_point - basis_z * 0.0032
 
-        # todo: dx and dy are foil dimensions - width_x, width_y
         foil = BolometerFoil(foil_id, centre_point, basis_x, dx, basis_y, dy, slit_objects[slit_id], parent=bolometer_camera)
 
         bolometer_camera.add_foil_detector(foil)
@@ -77,7 +77,6 @@ def load_kb5_camera(camera_id, parent=None):
     return bolometer_camera
 
 
-# TODO: write a SAL data object for this data and modify this routine to use that object
 def load_kb5_voxel_grid(parent=None, name=None):
 
     directory = os.path.split(__file__)[0]
