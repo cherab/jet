@@ -66,12 +66,10 @@ def load_kb5_camera(camera_id, parent=None):
             #     centre_point = centre_point + basis_x * 0.001
             if i == 31-1:
                 centre_point = centre_point - basis_x * 0.001
+        else:
+            basis_z = basis_x.cross(basis_y).normalise()
+            centre_point = centre_point - basis_z * 0.0032
 
-
-        # print()
-        # print(slit_objects.keys())
-        # print(slit_id)
-        # print()
         foil = BolometerFoil(foil_id, centre_point, basis_x, dx, basis_y, dy, slit_objects[slit_id], parent=bolometer_camera)
 
         bolometer_camera.add_foil_detector(foil)
