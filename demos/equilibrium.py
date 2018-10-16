@@ -16,23 +16,24 @@
 # See the Licence for the specific language governing permissions and limitations
 # under the Licence.
 
-import matplotlib.pyplot as plt
-
-from cherab.jet import JETEquilibrium
-from cherab.core.math import sample2d, sample3d
-from cherab.tools.equilibrium import plot_equilibrium
-
 """
 JET EFIT Equilibrium Object Demonstration
 -----------------------------------------
 
-This field will demonstrate how to:
+This file will demonstrate how to:
 
  * read JET equilibrium
  * obtain individual time slices
  * access equilibrium attributes
  * map functions onto flux surfaces (2d and 3d)
+
 """
+
+import matplotlib.pyplot as plt
+
+from cherab.jet import JETEquilibrium
+from cherab.core.math import sample2d, Slice3D, Interpolate1DCubic
+from cherab.tools.equilibrium import plot_equilibrium
 
 # Read all the equilibrium data for a JET pulse from the intershot DDA.
 # Note: if left unspecified as below, the DDA and user default to 'EFIT' and 'JETPPF' respectively.
@@ -65,18 +66,18 @@ print('B-field at (3.1, 0.2)m: {}'.format(b))
 print('Inside LCFS at (3.1, 0.2)m: {}'.format(equilibrium.inside_lcfs(3.1, 0.2)))
 print('Inside LCFS at (3.1, 1.5)m: {}'.format(equilibrium.inside_lcfs(3.1, 1.5)))
 
-# The equilibrium object includes wor methods for mapping functions onto the flux surfaces.
+# The equilibrium object includes methods for mapping functions onto the flux surfaces.
 # These create 2D or 3D functions or e.g. temperature, density etc... according to the profile being mapped.
 # The user can supply either a python function (with 1 argument - normalised psi), a Function1D object or a numerical
 # array holding the normalised psi and function values.
 
-# In this example we create 2D and 3D "temperature" profiles from an array of data. The array is interpolated with
-# cubic interpolation and then mapped onto the normalised psi grid.
+# In this example we create fake 2D and 3D "temperature" profiles from an array of data.
+# The array is interpolated with cubic interpolation and then mapped onto the normalised psi grid.
 temperature_2d = equilibrium.map2d([[0, 0.5, 0.9, 1.0], [5000, 4000, 2000, 0]])
 temperature_3d = equilibrium.map3d([[0, 0.5, 0.9, 1.0], [5000, 4000, 2000, 0]])
 
 # display 2D temperature
-print("Plotting 2d temperature...")
+print("Plotting array based 2d temperature...")
 
 rmin, rmax = equilibrium.r_range
 zmin, zmax = equilibrium.z_range
@@ -89,32 +90,67 @@ plt.axes(aspect='equal')
 plt.pcolormesh(r, z, temperature_grid.transpose(), shading='gouraud')
 plt.autoscale(tight=True)
 plt.colorbar()
-plt.title('2D Temperature')
+plt.title('2D Temperature (array)')
 
 # display 3D temperature
-print("Plotting 3d temperature...")
+print("Plotting array based 3d temperature...")
 
 rmin, rmax = equilibrium.r_range
 zmin, zmax = equilibrium.z_range
 nr = round((rmax - rmin) / 0.025)
 nz = round((zmax - zmin) / 0.025)
-x, y, z, temperature_grid = sample3d(temperature_3d, (-rmax, rmax, nr), (-rmax, rmax, nr), (0, 0.1, 1))
+temperature_slice = Slice3D(temperature_3d, axis='z', value=0.0)
+x, y, temperature_grid = sample2d(temperature_slice, (-rmax, rmax, nr), (-rmax, rmax, nr))
 
 plt.figure()
 plt.axes(aspect='equal')
-plt.pcolormesh(x, y, temperature_grid[:, :, 0].transpose(), shading='gouraud')
+plt.pcolormesh(x, y, temperature_grid.transpose(), shading='gouraud')
 plt.autoscale(tight=True)
 plt.colorbar()
-plt.title('3D Temperature (x-y slice)')
+plt.title('3D Temperature (x-y slice, array)')
 
+# In this example we interpolate the temperature data manually to produce a continuous function
+# and then map that function around the flux surfaces to give the same result
+te_psin = Interpolate1DCubic([0, 0.5, 0.9, 1.0], [5000, 4000, 2000, 0])
 
+# map to produce 2D and 3D temperature profiles
+temperature_2d = equilibrium.map2d(te_psin)
+temperature_3d = equilibrium.map3d(te_psin)
+
+# display 2D temperature
+print("Plotting function based 2d temperature...")
+
+rmin, rmax = equilibrium.r_range
+zmin, zmax = equilibrium.z_range
+nr = round((rmax - rmin) / 0.025)
+nz = round((zmax - zmin) / 0.025)
+r, z, temperature_grid = sample2d(temperature_2d, (rmin, rmax, nr), (zmin, zmax, nz))
+
+plt.figure()
+plt.axes(aspect='equal')
+plt.pcolormesh(r, z, temperature_grid.transpose(), shading='gouraud')
+plt.autoscale(tight=True)
+plt.colorbar()
+plt.title('2D Temperature (function)')
+
+# display 3D temperature
+print("Plotting function based 3d temperature...")
+
+rmin, rmax = equilibrium.r_range
+zmin, zmax = equilibrium.z_range
+nr = round((rmax - rmin) / 0.01)
+nz = round((zmax - zmin) / 0.01)
+temperature_slice = Slice3D(temperature_3d, axis='z', value=0.0)
+x, y, temperature_grid = sample2d(temperature_slice, (-rmax, rmax, nr), (-rmax, rmax, nr))
+
+plt.figure()
+plt.axes(aspect='equal')
+plt.pcolormesh(x, y, temperature_grid.transpose(), shading='gouraud')
+plt.autoscale(tight=True)
+plt.colorbar()
+plt.title('3D Temperature (x-y slice, function)')
 
 # the cherab package has a convenience tool for viewing an equilibrium
 # this function samples the various equilibrium attributes and renders them as images
 print('Plotting equilibrium data...')
 plot_equilibrium(equilibrium)
-
-
-
-
-
