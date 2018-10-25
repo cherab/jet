@@ -48,18 +48,19 @@ def load_kl11_voxel_grid(parent=None, name=None):
     return voxel_grid
 
 
-def load_kl11_sensitivity_matrix(reflections=True):
+def load_kl11_sensitivity_matrix(reflections=True, stride=1):
 
     base_path = '/work/mcarr/tasks/kl11/data'
+    dimension = int(np.ceil(1000 / stride))
 
-    sensitivity = np.zeros((2655, 1000000))
+    sensitivity = np.zeros((2655, dimension * dimension))
 
     if reflections:
         for i in range(2655):
-            sensitivity[i, :] = np.load(os.path.join(base_path, 'kl11_rf_sensitivity_matrix_{}.npy'.format(i))).flatten()
+            sensitivity[i, :] = np.load(os.path.join(base_path, 'kl11_rf_sensitivity_matrix_{}.npy'.format(i)))[::stride,::stride].flatten()
     else:
         for i in range(2655):
-            sensitivity[i, :] = np.load(os.path.join(base_path, 'kl11_norf_sensitivity_matrix_{}.npy'.format(i))).flatten()
+            sensitivity[i, :] = np.load(os.path.join(base_path, 'kl11_norf_sensitivity_matrix_{}.npy'.format(i)))[::stride,::stride].flatten()
 
     return np.swapaxes(sensitivity, 0, 1)
 
