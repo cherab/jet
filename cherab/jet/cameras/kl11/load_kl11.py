@@ -1,6 +1,6 @@
 
 import os
-import json
+import csv
 import numpy as np
 
 from raysect.core import Point2D
@@ -30,18 +30,18 @@ def load_kl11_camera(parent=None, pipelines=None, stride=1):
 def load_kl11_voxel_grid(parent=None, name=None):
 
     directory = os.path.split(__file__)[0]
-    voxel_grid_file = os.path.join(directory, "kl11_voxel_grid.json")
-
-    with open(voxel_grid_file, 'r') as fh:
-        grid_description = json.load(fh)
+    voxel_grid_file = os.path.join(directory, "kl11_voxel_grid.csv")
 
     voxel_coordinates = []
-    for voxel in grid_description['cells']:
-        v1 = Point2D(voxel['p1'][0], voxel['p1'][1])
-        v2 = Point2D(voxel['p2'][0], voxel['p2'][1])
-        v3 = Point2D(voxel['p3'][0], voxel['p3'][1])
-        v4 = Point2D(voxel['p4'][0], voxel['p4'][1])
-        voxel_coordinates.append((v1, v2, v3, v4))
+    with open(voxel_grid_file, 'r') as fh:
+        reader = csv.reader(fh)
+
+        for row in reader:
+            v1 = Point2D(float(row[1]), float(row[2]))
+            v2 = Point2D(float(row[3]), float(row[4]))
+            v3 = Point2D(float(row[5]), float(row[6]))
+            v4 = Point2D(float(row[7]), float(row[8]))
+            voxel_coordinates.append((v1, v2, v3, v4))
 
     voxel_grid = ToroidalVoxelGrid(voxel_coordinates, parent=parent, name=name)
 
