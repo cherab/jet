@@ -9,10 +9,9 @@ from cherab.tools.observers import load_calcam_calibration
 from cherab.tools.inversions import ToroidalVoxelGrid
 
 
-def load_kl11_camera(parent=None, pipelines=None, reduction_factor=1):
+def load_kl11_camera(parent=None, pipelines=None, stride=1):
 
-    camera_config = load_calcam_calibration('/home/mcarr/cherab/cherab_jet/cherab/jet/cameras/kl11/KL11-E1DC_87516.nc',
-                                            reduction_factor=reduction_factor)
+    camera_config = load_calcam_calibration('/home/mcarr/cherab/cherab_jet/cherab/jet/cameras/kl11/KL11-E1DC_87516.nc')
 
     if not pipelines:
         power_unfiltered = PowerPipeline2D(display_unsaturated_fraction=0.96, name="Unfiltered Power (W)")
@@ -20,7 +19,8 @@ def load_kl11_camera(parent=None, pipelines=None, reduction_factor=1):
         pipelines = [power_unfiltered]
 
     pixels_shape, pixel_origins, pixel_directions = camera_config
-    camera = VectorCamera(pixel_origins, pixel_directions, pipelines=pipelines, parent=parent)
+    camera = VectorCamera(pixel_origins[::stride, ::stride], pixel_directions[::stride, ::stride],
+                          pipelines=pipelines, parent=parent)
     camera.spectral_bins = 15
     camera.pixel_samples = 1
 
