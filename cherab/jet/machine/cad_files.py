@@ -34,8 +34,8 @@ except KeyError:
                          "not set.")
 
 
-tungsten_roughness = 0.2
-beryllium_roughness = 0.2
+tungsten_roughness = 0.29
+beryllium_roughness = 0.26
 lambertian_roughness = 0.1
 
 
