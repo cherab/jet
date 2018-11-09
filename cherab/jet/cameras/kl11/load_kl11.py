@@ -9,10 +9,9 @@ from cherab.tools.observers import load_calcam_calibration
 from cherab.tools.inversions import ToroidalVoxelGrid
 
 
-def load_kl11_camera(parent=None, pipelines=None, reduction_factor=1):
+def load_kl11_camera(parent=None, pipelines=None, stride=1):
 
-    camera_config = load_calcam_calibration('/home/mcarr/cherab/cherab_jet/cherab/jet/cameras/kl11/KL11-E1DC_87516.nc',
-                                            reduction_factor=reduction_factor)
+    camera_config = load_calcam_calibration('/home/mcarr/cherab/cherab_jet/cherab/jet/cameras/kl11/KL11-E1DC_87516.nc')
 
     if not pipelines:
         power_unfiltered = PowerPipeline2D(display_unsaturated_fraction=0.96, name="Unfiltered Power (W)")
@@ -20,7 +19,8 @@ def load_kl11_camera(parent=None, pipelines=None, reduction_factor=1):
         pipelines = [power_unfiltered]
 
     pixels_shape, pixel_origins, pixel_directions = camera_config
-    camera = VectorCamera(pixel_origins, pixel_directions, pipelines=pipelines, parent=parent)
+    camera = VectorCamera(pixel_origins[::stride, ::stride], pixel_directions[::stride, ::stride],
+                          pipelines=pipelines, parent=parent)
     camera.spectral_bins = 15
     camera.pixel_samples = 1
 
@@ -48,18 +48,19 @@ def load_kl11_voxel_grid(parent=None, name=None):
     return voxel_grid
 
 
-def load_kl11_sensitivity_matrix(reflections=True):
+def load_kl11_sensitivity_matrix(reflections=True, stride=1):
 
     base_path = '/work/mcarr/tasks/kl11/data'
+    dimension = int(np.ceil(1000 / stride))
 
-    sensitivity = np.zeros((2655, 1000000))
+    sensitivity = np.zeros((2655, dimension * dimension))
 
     if reflections:
         for i in range(2655):
-            sensitivity[i, :] = np.load(os.path.join(base_path, 'kl11_rf_sensitivity_matrix_{}.npy'.format(i))).flatten()
+            sensitivity[i, :] = np.load(os.path.join(base_path, 'kl11_rf_sensitivity_matrix_{}.npy'.format(i)))[::stride,::stride].flatten()
     else:
         for i in range(2655):
-            sensitivity[i, :] = np.load(os.path.join(base_path, 'kl11_norf_sensitivity_matrix_{}.npy'.format(i))).flatten()
+            sensitivity[i, :] = np.load(os.path.join(base_path, 'kl11_norf_sensitivity_matrix_{}.npy'.format(i)))[::stride,::stride].flatten()
 
     return np.swapaxes(sensitivity, 0, 1)
 
