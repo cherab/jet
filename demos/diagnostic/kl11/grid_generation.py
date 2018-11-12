@@ -154,7 +154,7 @@ with open('kl11_voxel_grid.csv', 'w') as csvfile:
         writer.writerow((ith_voxel, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, p4.x, p4.y))
 
 
-np.save(open('grid_laplacian.ndarray', 'wb'), csc_matrix(grid_laplacian))
+np.save(open('grid_laplacian.ndarray', 'wb'), grid_laplacian)
 
 
 
