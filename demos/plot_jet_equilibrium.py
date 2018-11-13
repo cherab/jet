@@ -20,7 +20,7 @@ from cherab.jet.equilibrium import JETEquilibrium
 
 
 print("Reading equilibrium...")
-pulse_equilibrium = JETEquilibrium(87738)
+pulse_equilibrium = JETEquilibrium(91693)
 
 eq = pulse_equilibrium.time(45.0)
 

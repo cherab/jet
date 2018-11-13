@@ -25,6 +25,11 @@ from raysect.core import Point2D
 from cherab.tools.equilibrium import EFITEquilibrium
 
 from jet.data import sal
+from sal.core.exception import NodeNotFound
+
+
+# special JET constant that signifies if an x-point is not present
+X_POINT_UNAVAILABLE = -10
 
 
 class JETEquilibrium:
@@ -77,12 +82,40 @@ class JETEquilibrium:
         self._axis_coord_r = sal.get(DATA_PATH.format(pulse, user, dda, 'rmag', sequence))
         self._axis_coord_z = sal.get(DATA_PATH.format(pulse, user, dda, 'zmag', sequence))
 
+        # obtain x-points
+        self._lower_xpoint_r = sal.get(DATA_PATH.format(pulse, user, dda, 'rxpl', sequence))
+        self._lower_xpoint_z = sal.get(DATA_PATH.format(pulse, user, dda, 'zxpl', sequence))
+
+        self._upper_xpoint_r = sal.get(DATA_PATH.format(pulse, user, dda, 'rxpu', sequence))
+        self._upper_xpoint_z = sal.get(DATA_PATH.format(pulse, user, dda, 'zxpu', sequence))
+
+        # obtain strike-points
+        self._lower_inner_strikepoint_r = sal.get(DATA_PATH.format(pulse, user, dda, 'rsil', sequence))
+        self._lower_inner_strikepoint_z = sal.get(DATA_PATH.format(pulse, user, dda, 'zsil', sequence))
+
+        self._lower_outer_strikepoint_r = sal.get(DATA_PATH.format(pulse, user, dda, 'rsol', sequence))
+        self._lower_outer_strikepoint_z = sal.get(DATA_PATH.format(pulse, user, dda, 'zsol', sequence))
+
+        self._upper_inner_strikepoint_r = sal.get(DATA_PATH.format(pulse, user, dda, 'rsiu', sequence))
+        self._upper_inner_strikepoint_z = sal.get(DATA_PATH.format(pulse, user, dda, 'zsiu', sequence))
+
+        self._upper_outer_strikepoint_r = sal.get(DATA_PATH.format(pulse, user, dda, 'rsou', sequence))
+        self._upper_outer_strikepoint_z = sal.get(DATA_PATH.format(pulse, user, dda, 'zsou', sequence))
+
         # obtain vacuum magnetic field sample
         self._b_vacuum_magnitude = sal.get(DATA_PATH.format(pulse, user, dda, 'bvac', sequence))
 
         # obtain lcfs boundary polygon
         self._lcfs_poly_r = sal.get(DATA_PATH.format(pulse, user, dda, 'rbnd', sequence))
         self._lcfs_poly_z = sal.get(DATA_PATH.format(pulse, user, dda, 'zbnd', sequence))
+
+        # obtain limiter polygon
+        try:
+            self._limiter_poly_r = sal.get(DATA_PATH.format(pulse, user, dda, 'rlim', sequence))
+            self._limiter_poly_z = sal.get(DATA_PATH.format(pulse, user, dda, 'zlim', sequence))
+        except NodeNotFound:
+            self._limiter_poly_r = None
+            self._limiter_poly_z = None
 
         self.time_range = self.time_slices.min(), self.time_slices.max()
 
@@ -113,8 +146,7 @@ class JETEquilibrium:
         psi_axis = self._psi_axis.data[index]
         axis_coord = Point2D(self._axis_coord_r.data[index], self._axis_coord_z.data[index])
         b_vacuum_magnitude = self._b_vacuum_magnitude.data[index]
-        lcfs_poly_r = self._lcfs_poly_r.data[index, :]
-        lcfs_poly_z = self._lcfs_poly_z.data[index, :]
+        x_points, strike_points = self._process_points(index)
 
         # pack f_profile into a Nx2 array
         f_profile = np.zeros((2, self._f.dimensions[1].length))
@@ -125,11 +157,20 @@ class JETEquilibrium:
         # the original data is 3D, packed into a 2D array, this must be reshaped
         psi = np.reshape(self._packed_psi.data[index, :], (len(self._r.data), len(self._z.data)), order='F')
 
-        # convert raw lcfs poly coordinates into a polygon object
-        lcfs_polygon = self._process_efit_lcfs_polygon(lcfs_poly_r, lcfs_poly_z)
+        # convert raw poly coordinates into a polygon
+        lcfs_poly_r = self._lcfs_poly_r.data[index, :]
+        lcfs_poly_z = self._lcfs_poly_z.data[index, :]
+        lcfs_polygon = self._process_efit_polygon(lcfs_poly_r, lcfs_poly_z)
 
-        return EFITEquilibrium(self._r, self._z, psi, psi_axis, psi_lcfs, axis_coord, f_profile,
-                               B_VACUUM_RADIUS, b_vacuum_magnitude, lcfs_polygon, time)
+        if self._limiter_poly_r and self._limiter_poly_z:
+            # todo: when efit reprocessed this data will be 1D, working around a bug in idl efit->ppf code.
+            limiter_polygon = self._process_efit_polygon(self._limiter_poly_r.data[0, :], self._limiter_poly_z.data[0, :])
+        else:
+            limiter_polygon = None
+
+        return EFITEquilibrium(self._r, self._z, psi, psi_axis, psi_lcfs, axis_coord, x_points, strike_points,
+                               f_profile, B_VACUUM_RADIUS, b_vacuum_magnitude,
+                               lcfs_polygon, limiter_polygon, time)
 
     @staticmethod
     def _find_nearest(array, value):
@@ -144,15 +185,40 @@ class JETEquilibrium:
         else:
             return index + 1
 
+    def _process_points(self, index):
+
+        x_points = []
+        strike_points = []
+
+        # is lower x-point present?
+        lower = Point2D(self._lower_xpoint_r.data[index], self._lower_xpoint_z.data[index])
+        if not (lower.x == X_POINT_UNAVAILABLE and lower.y == X_POINT_UNAVAILABLE):
+            x_points.append(lower)
+            strike_points += [
+                Point2D(self._lower_inner_strikepoint_r.data[index], self._lower_inner_strikepoint_z.data[index]),
+                Point2D(self._lower_outer_strikepoint_r.data[index], self._lower_outer_strikepoint_z.data[index])
+            ]
+
+        # is upper x-point present?
+        upper = Point2D(self._upper_xpoint_r.data[index], self._upper_xpoint_z.data[index])
+        if not (upper.x == X_POINT_UNAVAILABLE and upper.y == X_POINT_UNAVAILABLE):
+            x_points.append(upper)
+            strike_points += [
+                Point2D(self._upper_inner_strikepoint_r.data[index], self._upper_inner_strikepoint_z.data[index]),
+                Point2D(self._upper_outer_strikepoint_r.data[index], self._upper_outer_strikepoint_z.data[index])
+            ]
+
+        return x_points, strike_points
+
     @staticmethod
-    def _process_efit_lcfs_polygon(poly_r, poly_z):
+    def _process_efit_polygon(poly_r, poly_z):
 
         if poly_r.shape != poly_z.shape:
-            raise ValueError("EFIT LCFS polygon coordinate arrays are inconsistent in length.")
+            raise ValueError("EFIT polygon coordinate arrays are inconsistent in length.")
 
         n = poly_r.shape[0]
         if n < 2:
-            raise ValueError("EFIT LCFS polygon coordinate contain less than 2 points.")
+            raise ValueError("EFIT polygon coordinate contain less than 2 points.")
 
         # boundary polygon contains redundant points that must be removed
         unique = (poly_r != poly_r[0]) | (poly_z != poly_z[0])
@@ -165,5 +231,4 @@ class JETEquilibrium:
         poly_coords[0, :] = poly_r
         poly_coords[1, :] = poly_z
 
-        # magic number for vocel_coef from old code
         return poly_coords

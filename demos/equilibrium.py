@@ -37,8 +37,8 @@ from cherab.tools.equilibrium import plot_equilibrium
 
 # Read all the equilibrium data for a JET pulse from the intershot DDA.
 # Note: if left unspecified as below, the DDA and user default to 'EFIT' and 'JETPPF' respectively.
-print('Reading JET equilibrium for pulse 87737...')
-equilibria = JETEquilibrium(87737)
+print('Reading JET equilibrium for pulse 91693...')
+equilibria = JETEquilibrium(91693)
 
 # Obtain an individual time-slice.
 # This method will locate the nearest time-slice to the specified time.
@@ -153,4 +153,4 @@ plt.title('3D Temperature (x-y slice, function)')
 # the cherab package has a convenience tool for viewing an equilibrium
 # this function samples the various equilibrium attributes and renders them as images
 print('Plotting equilibrium data...')
-plot_equilibrium(equilibrium)
+plot_equilibrium(equilibrium, detail=True)
