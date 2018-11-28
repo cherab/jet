@@ -9,9 +9,14 @@ from cherab.tools.observers import load_calcam_calibration
 from cherab.tools.inversions import ToroidalVoxelGrid
 
 
-def load_kl11_camera(parent=None, pipelines=None, stride=1):
+def load_kl11_camera(camera='c', parent=None, pipelines=None, stride=1):
 
-    camera_config = load_calcam_calibration('/home/mcarr/cherab/cherab_jet/cherab/jet/cameras/kl11/KL11-E1DC_87516.nc')
+    if camera == 'c':
+        camera_config = load_calcam_calibration('/home/mcarr/cherab/cherab_jet/cherab/jet/cameras/kl11/KL11-E1DC_87516.nc')
+    elif camera == 'e':
+        camera_config = load_calcam_calibration('/home/mcarr/cherab/cherab_jet/cherab/jet/cameras/kl11/KL11-E1DE_89248_53.913.nc')
+    else:
+        raise ValueError("Unidentified KL11 camera - '{}'".format(camera))
 
     if not pipelines:
         power_unfiltered = PowerPipeline2D(display_unsaturated_fraction=0.96, name="Unfiltered Power (W)")
