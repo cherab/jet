@@ -52,16 +52,12 @@ def load_kl11_sensitivity_matrix(reflections=True):
 
     base_path = '/work/mcarr/tasks/kl11/data'
     camera_dimension = 334
-    grid_length = 7989
-
-    sensitivity = np.zeros((grid_length, camera_dimension * camera_dimension))
+    grid_length = 8893
 
     if reflections:
-        for i in range(grid_length):
-            sensitivity[i, :] = np.load(os.path.join(base_path, 'kl11_rf_sensitivity_matrix_{}.npy'.format(i))).flatten()
+        sensitivity = np.load(os.path.join(base_path, 'kl11_rf_sensitivity_matrix.npy')).reshape((grid_length, camera_dimension * camera_dimension))
     else:
-        for i in range(grid_length):
-            sensitivity[i, :] = np.load(os.path.join(base_path, 'kl11_norf_sensitivity_matrix_{}.npy'.format(i))).flatten()
+        sensitivity = np.load(os.path.join(base_path, 'kl11_norf_sensitivity_matrix.npy')).reshape((grid_length, camera_dimension * camera_dimension))
 
     return np.swapaxes(sensitivity, 0, 1)
 
