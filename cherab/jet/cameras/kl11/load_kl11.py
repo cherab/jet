@@ -13,6 +13,8 @@ def load_kl11_camera(camera='c', parent=None, pipelines=None, stride=1):
 
     if camera == 'c':
         camera_config = load_calcam_calibration('/home/mcarr/cherab/cherab_jet/cherab/jet/cameras/kl11/KL11-E1DC_87516.nc')
+    elif camera == 'd':
+        camera_config = load_calcam_calibration('/home/mcarr/cherab/cherab_jet/cherab/jet/cameras/kl11/KL11-E1DD_89248_53.883.nc')
     elif camera == 'e':
         camera_config = load_calcam_calibration('/home/mcarr/cherab/cherab_jet/cherab/jet/cameras/kl11/KL11-E1DE_89248_53.913.nc')
     else:
