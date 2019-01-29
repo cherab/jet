@@ -74,6 +74,9 @@ class JETEquilibrium:
         # obtain f-profile
         self._f = sal.get(DATA_PATH.format(pulse, user, dda, 'f', sequence))
 
+        # q profile
+        self._q = sal.get(DATA_PATH.format(pulse, user, dda, 'q', sequence))
+
         # obtain psi at the plasma boundary and magnetic axis
         self._psi_lcfs = sal.get(DATA_PATH.format(pulse, user, dda, 'fbnd', sequence))
         self._psi_axis = sal.get(DATA_PATH.format(pulse, user, dda, 'faxs', sequence))
@@ -153,6 +156,11 @@ class JETEquilibrium:
         f_profile[0, :] = self._f.dimensions[1].data
         f_profile[1, :] = self._f.data[index, :]
 
+        # pack q_profile into a Nx2 array
+        q_profile = np.zeros((2, self._q.dimensions[1].length))
+        q_profile[0, :] = self._q.dimensions[1].data
+        q_profile[1, :] = self._q.data[index, :]
+
         # slice and reshape psi data for specified time point
         # the original data is 3D, packed into a 2D array, this must be reshaped
         psi = np.reshape(self._packed_psi.data[index, :], (len(self._r.data), len(self._z.data)), order='F')
@@ -169,7 +177,7 @@ class JETEquilibrium:
             limiter_polygon = None
 
         return EFITEquilibrium(self._r, self._z, psi, psi_axis, psi_lcfs, axis_coord, x_points, strike_points,
-                               f_profile, B_VACUUM_RADIUS, b_vacuum_magnitude,
+                               f_profile, q_profile, B_VACUUM_RADIUS, b_vacuum_magnitude,
                                lcfs_polygon, limiter_polygon, time)
 
     @staticmethod
