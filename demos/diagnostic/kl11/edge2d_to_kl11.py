@@ -7,7 +7,7 @@ from raysect.core import Point3D, Vector3D
 from raysect.core.math.function.function3d import PythonFunction3D
 from raysect.optical import Spectrum
 
-from cherab.core.atomic import deuterium, carbon, Line
+from cherab.core.atomic import deuterium, helium, carbon, Line
 from cherab.core.model import ExcitationLine, RecombinationLine
 from cherab.openadas import OpenADAS
 from cherab.edge2d import load_edge2d_from_eproc
@@ -19,7 +19,9 @@ available_lines = {
     'd_beta': Line(deuterium, 0, (4, 2)),
     'd-gamma': Line(deuterium, 0, (5, 2)),
     'd_delta': Line(deuterium, 0, (6, 2)),
-    'd_epsilon': Line(deuterium, 0, (7, 2))
+    'd_epsilon': Line(deuterium, 0, (7, 2)),
+    'heliumii_468': Line(helium, 1, (4, 3)),
+    'carbonii_515': Line(carbon, 1, ("2s1 2p1 3d1 2D4.5", "2s2 4d1 2D4.5")),
     'ciii_465': Line(carbon, 2, ('2s1 3p1 3P4.0', '2s1 3s1 3S1.0'))
 }
 
