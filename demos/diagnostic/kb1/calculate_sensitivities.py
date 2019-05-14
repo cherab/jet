@@ -9,7 +9,7 @@ from raysect.core.workflow import MulticoreEngine
 from cherab.jet.machine import import_jet_mesh
 from cherab.jet.bolometry import load_kb1_camera, load_kb1_voxel_grid
 
-# Not enough memory for many processes with big grid, so keep this low
+
 NCORES = int(os.environ.get("NSLOTS", 4))
 
 

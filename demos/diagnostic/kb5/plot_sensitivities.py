@@ -2,11 +2,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from cherab.jet.bolometry import load_kb5_inversion_grid, load_kb5_camera
+from cherab.jet.bolometry import load_kb5_voxel_grid, load_kb5_camera
 from cherab.jet.machine import plot_jet_wall_outline
 
 plt.ion()
-inversion_grid = load_kb5_inversion_grid()
+inversion_grid = load_kb5_voxel_grid()
 
 kb5v = load_kb5_camera('KB5V')
 kb5v_sensitivities = np.load('kb5v_sensitivities.npy')
