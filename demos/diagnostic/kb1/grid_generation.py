@@ -5,7 +5,7 @@ import numpy as np
 from raysect.core import Point2D
 
 from cherab.jet.machine import get_jet_wall_mask
-from cherab.jet.bolometry.kb5 import load_kb5
+from cherab.jet.bolometry.kb1 import load_kb1
 
 
 wall_mask = get_jet_wall_mask()
@@ -20,7 +20,7 @@ ny = round(((yrange[1] - yrange[0]) / resolution))
 
 num_voxels = nx * ny
 
-# Coordinates of vertices
+# Coordinate of vertices
 xpoints = np.linspace(xrange[0], xrange[1], num=nx + 1)
 ypoints = np.linspace(yrange[0], yrange[1], num=ny + 1)
 
@@ -54,15 +54,15 @@ for i in range(num_cells):
     cell_data[i, 3, :] = p4.x, p4.y
 
 
-kb5_grid = {
+kb1_grid = {
     'voxels': grid_cells,
     'index_2D_to_1D_map': grid_index_2D_to_1D_map,
     'index_1D_to_2D_map': grid_index_1D_to_2D_map,
 }
 
 # Save the files in the same directory as the loader module
-directory = os.path.split(load_kb5.__file__)[0]
-file_name = "kb5_voxel_grid.pickle"
+directory = os.path.split(load_kb1.__file__)[0]
+file_name = "kb1_voxel_grid.pickle"
 file_path = os.path.join(directory, file_name)
 with open(file_path, "wb") as f:
-    pickle.dump(kb5_grid, f)
+    pickle.dump(kb1_grid, f)
