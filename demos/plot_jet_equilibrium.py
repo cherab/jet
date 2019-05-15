@@ -24,8 +24,8 @@ pulse_equilibrium = JETEquilibrium(91693)
 
 eq = pulse_equilibrium.time(45.0)
 
-plot_equilibrium(pulse_equilibrium.time(45.0))
+plot_equilibrium(pulse_equilibrium.time(45.0), detail=True)
 
-plot_equilibrium(pulse_equilibrium.time(50.0))
+plot_equilibrium(pulse_equilibrium.time(50.0), detail=True)
 
-plot_equilibrium(pulse_equilibrium.time(55.0))
+plot_equilibrium(pulse_equilibrium.time(55.0), detail=True)

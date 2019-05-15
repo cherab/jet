@@ -1,6 +1,7 @@
 
 import os
-import json
+import pickle
+import textwrap
 from raysect.core import Point2D, Point3D, Vector3D, translate, rotate_z, rotate_basis
 
 from cherab.tools.observers.bolometry import BolometerCamera, BolometerSlit, BolometerFoil
@@ -92,9 +93,52 @@ def load_kb1_camera(parent=None):
     return bolometer_camera
 
 
-def load_kb1_voxel_grid(parent=None, name=''):
-    with open(os.path.join(_DATA_PATH, "kb1_voxel_grid.json"), "r") as f:
-        grid_voxels = json.load(f)
-    voxel_list = [[Point2D(*vertex) for vertex in voxel] for voxel in grid_voxels]
-    grid = ToroidalVoxelGrid(voxel_list, parent=parent, name=name)
-    return grid
+def _read_grid_pickle():
+    grid_file_name = "kb1_voxel_grid.pickle"
+    voxel_grid_file = os.path.join(_DATA_PATH, grid_file_name)
+
+    try:
+        with open(voxel_grid_file, 'rb') as fh:
+            grid_description = pickle.load(fh)
+    except FileNotFoundError:
+        message = textwrap.dedent(
+            """
+            {}
+            not found: please run the grid_generation.py script in
+            the KB1 demos directory to generate the default grid, or
+            produce a new grid in the same file format with the same
+            path."""
+            .format(voxel_grid_file)
+        )
+        raise FileNotFoundError(message)
+    return grid_description
+
+
+def load_kb1_voxel_grid(parent=None, name=None):
+
+    grid_description = _read_grid_pickle()
+
+    voxel_coordinates = []
+    for voxel in grid_description['voxels']:
+        v1 = Point2D(voxel[0][0], voxel[0][1])
+        v2 = Point2D(voxel[1][0], voxel[1][1])
+        v3 = Point2D(voxel[2][0], voxel[2][1])
+        v4 = Point2D(voxel[3][0], voxel[3][1])
+        voxel_coordinates.append((v1, v2, v3, v4))
+
+    voxel_grid = ToroidalVoxelGrid(voxel_coordinates, parent=parent, name=name,
+                                   primitive_type="csg")
+
+    return voxel_grid
+
+
+def load_kb1_grid_extras():
+    """
+    Return extra information about the grid.
+
+    This includes the 1D<->2D mappings, but not the voxel coordinates.
+    Use load_kb1_voxel_grid for that.
+    """
+    grid_description = _read_grid_pickle()
+    grid_description.pop('voxels')
+    return grid_description

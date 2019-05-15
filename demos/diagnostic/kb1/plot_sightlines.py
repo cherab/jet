@@ -1,7 +1,6 @@
 
 from math import sqrt
 import matplotlib.pyplot as plt
-from raysect.primitive import import_obj
 from raysect.optical import World
 from raysect.optical.material import AbsorbingSurface
 
@@ -9,7 +8,6 @@ from cherab.jet.machine import import_jet_mesh, plot_jet_wall_outline
 from cherab.jet.bolometry import load_kb1_camera
 
 
-# Calculate KB5V camera sensitivities
 world = World()
 import_jet_mesh(world, override_material=AbsorbingSurface())
 
