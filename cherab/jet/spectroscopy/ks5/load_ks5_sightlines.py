@@ -48,7 +48,11 @@ def _setup_idl():
         idl.execute("!PATH=!PATH + ':' + expand_path( '+~cxs/idl/ks457_0/programs/')")
 
 
-def load_ks5_sightlines(pulse, spectrometer, parent=None):
+def load_ks5_sightlines(pulse, spectrometer, parent=None,
+                        fibre_names=None,
+                        min_wavelength = 526,
+                        max_wavelength = 532,
+                        spectral_bins = 500):
 
     if not pulse >= 76666:
         raise ValueError("Only shots >= 76666 are supported at this time.")
@@ -82,6 +86,10 @@ def load_ks5_sightlines(pulse, spectrometer, parent=None):
         if not fibre_name.strip():
             continue
 
+        if fibre_names and fibre_name not in fibre_names:
+             print('Skipped', fibre_name)
+             continue
+
         # Extract the fibres origin and direction
         xi = cg_align['origin_cart']['x'][icg]/1000
         yi = cg_align['origin_cart']['y'][icg]/1000
@@ -96,9 +104,9 @@ def load_ks5_sightlines(pulse, spectrometer, parent=None):
         los_vec = Vector3D(xj-xi, yj-yi, zj-zi).normalise()
 
         sight_line = SpectroscopicSightLine(los_origin, los_vec, name=fibre_name, parent=sightline_group)
-        sight_line.min_wavelength = 526
-        sight_line.max_wavelength = 532
-        sight_line.spectral_bins = 500
+        sight_line.min_wavelength = min_wavelength
+        sight_line.max_wavelength = max_wavelength
+        sight_line.spectral_bins = spectral_bins
 
         sightline_group.add_sight_line(sight_line)
 
