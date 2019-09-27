@@ -1,4 +1,4 @@
-
+import numpy as np
 
 from raysect.primitive import import_obj
 from raysect.optical import World
@@ -15,16 +15,21 @@ kb5v_collimator_mesh = import_obj(KB5V[0][0], scaling=0.001, name='kb5v_collimat
 kb5h_collimator_mesh = import_obj(KB5H[0][0], scaling=0.001, name='kb5h_collimator',
                                   parent=world, material=AbsorbingSurface())
 
-
 kb5v = load_kb5_camera('KB5V', parent=world)
+kb5v_etendues = []
 for detector in kb5v:
 
     etendue, etendue_error = detector.calculate_etendue(ray_count=400000)
     print("Detector {}: etendue {:.4G} +- {:.3G} m^2 str".format(detector.name, etendue, etendue_error))
+    kb5v_etendues.append((etendue, etendue_error))
+np.save("kb5v_etendue.npy", kb5v_etendues)
 
 
 kb5h = load_kb5_camera('KB5H', parent=world)
+kb5h_etendues = []
 for detector in kb5h:
 
     etendue, etendue_error = detector.calculate_etendue(ray_count=400000)
     print("Detector {}: etendue {:.4G} +- {:.3G} m^2 str".format(detector.name, etendue, etendue_error))
+    kb5h_etendues.append((etendue, etendue_error))
+np.save("kb5h_etendue.npy", kb5h_etendues)

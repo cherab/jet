@@ -80,6 +80,9 @@ def calculate_etendue(self, ray_count=10000, batches=10):
     return etendue, etendue_error
 
 
+kb1_etendues = []
 for detector in kb1:
     etendue, etendue_error = calculate_etendue(detector, ray_count=1000000)
     print("Detector {}: etendue {:.4G} +- {:.3G} m^2 str".format(detector.name, etendue, etendue_error))
+    kb1_etendues.append((etendue, etendue_error))
+    np.save("kb1_etendue.npy", kb1_etendues)
