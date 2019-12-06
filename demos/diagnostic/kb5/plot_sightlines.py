@@ -1,26 +1,20 @@
 
 from math import sqrt
 import matplotlib.pyplot as plt
-from raysect.primitive import import_obj
 from raysect.optical import World
 from raysect.optical.material import AbsorbingSurface
 
 from cherab.jet.machine import import_jet_mesh, plot_jet_wall_outline
-from cherab.jet.machine.cad_files import KB5V, KB5H
 from cherab.jet.bolometry import load_kb5_camera
 
 
 # Calculate KB5V camera sensitivities
 world = World()
 import_jet_mesh(world, override_material=AbsorbingSurface())
-kb5v_collimator_mesh = import_obj(KB5V[0][0], scaling=0.001, name='kb5v_collimator',
-                                  parent=world, material=AbsorbingSurface())
-kb5h_collimator_mesh = import_obj(KB5H[0][0], scaling=0.001, name='kb5h_collimator',
-                                  parent=world, material=AbsorbingSurface())
 
 
 plt.ion()
-kb5v = load_kb5_camera('KB5V', parent=world)
+kb5v = load_kb5_camera('KB5V', parent=world, override_material=AbsorbingSurface())
 for detector in kb5v:
 
     try:
@@ -43,7 +37,7 @@ for detector in kb5v:
 plot_jet_wall_outline()
 
 
-kb5h = load_kb5_camera('KB5H', parent=world)
+kb5h = load_kb5_camera('KB5H', parent=world, override_material=AbsorbingSurface())
 for detector in kb5h:
 
     try:
