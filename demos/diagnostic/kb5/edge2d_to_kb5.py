@@ -4,16 +4,13 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 from raysect.core import Point3D, Vector3D
-from raysect.core.math.function.function3d import PythonFunction3D
 from raysect.optical import Spectrum, World
 from raysect.optical.material import AbsorbingSurface
-from raysect.primitive import import_obj
 
 from cherab.openadas import OpenADAS
 from cherab.core.model import TotalRadiatedPower
 from cherab.edge2d import load_edge2d_from_eproc
 from cherab.jet.machine import import_jet_mesh
-from cherab.jet.machine.cad_files import KB5V, KB5H
 from cherab.jet.bolometry import load_kb5_camera
 
 
@@ -26,9 +23,6 @@ args = parser.parse_args()
 
 world = World()
 import_jet_mesh(world, override_material=AbsorbingSurface())
-kb5v_collimator_mesh = import_obj(KB5V[0][0], scaling=0.001, parent=world, material=AbsorbingSurface())
-kb5h_collimator_mesh = import_obj(KB5H[0][0], scaling=0.001, parent=world, material=AbsorbingSurface())
-
 
 edge2d_sim = load_edge2d_from_eproc(args.sim_path)
 # edge2d_sim = load_edge2d_from_eproc('/common/cmg/jsimpson/edge2d/runs/run1708151A/tran')
@@ -37,7 +31,10 @@ plasma.atomic_data = OpenADAS(missing_rates_return_null=True)
 
 models = []
 for species in plasma.composition:
-    models.append(TotalRadiatedPower(species.element, species.charge))
+    try:
+        models.append(TotalRadiatedPower(species.element, species.charge))
+    except ValueError:
+        pass
 plasma.models = models
 
 
@@ -59,7 +56,7 @@ plt.ylabel('z axis')
 plt.title("Total radiated power in R-Z [W/m^3/str]")
 
 
-kb5v = load_kb5_camera('KB5V', parent=world)
+kb5v = load_kb5_camera('KB5V', parent=world, override_material=AbsorbingSurface())
 kb5v_measurements = np.zeros((len(kb5v)))
 for i, detector in enumerate(kb5v):
     detector.observe()
@@ -71,7 +68,7 @@ plt.xlabel('Detector Index')
 plt.ylabel('Measured Power [W]')
 plt.title('Measured powers for KB5V')
 
-kb5h = load_kb5_camera('KB5H', parent=world)
+kb5h = load_kb5_camera('KB5H', parent=world, override_material=AbsorbingSurface())
 kb5h_measurements = np.zeros((len(kb5h)))
 for i, detector in enumerate(kb5h):
     detector.observe()

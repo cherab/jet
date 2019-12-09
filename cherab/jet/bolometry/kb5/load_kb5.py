@@ -4,29 +4,40 @@ import pickle
 import textwrap
 import numpy as np
 from raysect.core import Point2D, Point3D
+from raysect.primitive import import_obj
 
 from cherab.tools.observers.bolometry import BolometerCamera, BolometerSlit, BolometerFoil
 from cherab.tools.inversions.voxels import ToroidalVoxelGrid
+from cherab.jet.machine import KB5V, KB5H
 
 
 _DATA_PATH = os.path.split(__file__)[0]
 
 
-def load_kb5_camera(camera_id, parent=None):
+def load_kb5_camera(camera_id, parent=None, override_material=None):
 
     if camera_id == 'KB5V':
         foils = np.loadtxt(os.path.join(_DATA_PATH, 'kb5v_foils.csv'), delimiter=',')
         slits = np.loadtxt(os.path.join(_DATA_PATH, 'kb5v_slits.csv'), delimiter=',')
+        mesh_data = KB5V[0]
     elif camera_id == 'KB5H':
         foils = np.loadtxt(os.path.join(_DATA_PATH, 'kb5h_foils.csv'), delimiter=',')
         slits = np.loadtxt(os.path.join(_DATA_PATH, 'kb5h_slits.csv'), delimiter=',')
+        mesh_data = KB5H[0]
     else:
         raise ValueError("Unrecognised bolometer camera_id '{}'.".format(camera_id))
 
     num_slits = slits.shape[0]
     num_foils = foils.shape[0]
 
-    bolometer_camera = BolometerCamera(name=camera_id, parent=parent)
+    mesh_file = mesh_data[0]
+    mesh_material = override_material or mesh_data[1]
+
+    camera_geometry = import_obj(mesh_file, material=mesh_material, scaling=0.001,
+                                 name="{} mesh geometry".format(camera_id))
+
+    bolometer_camera = BolometerCamera(name=camera_id, parent=parent,
+                                       camera_geometry=camera_geometry)
 
     slit_objects = {}
     for i in range(num_slits):
