@@ -673,7 +673,7 @@ JET_MESH = ANTENNAS + INNER_WALL_GUARD_LIMITERS + INNER_WALL_CLADDING_TILES + OP
 
 
 def import_jet_mesh(world, override_material=None, tungsten_material=None, beryllium_material=None,
-                    lambert_material=None):
+                    lambert_material=None, verbose=True):
 
     for mesh_item in JET_MESH:
 
@@ -690,7 +690,8 @@ def import_jet_mesh(world, override_material=None, tungsten_material=None, beryl
         else:
             material = default_material
 
-        print("importing {}  ...".format(os.path.split(mesh_path)[1]))
+        if verbose:
+            print("importing {}  ...".format(os.path.split(mesh_path)[1]))
         directory, filename = os.path.split(mesh_path)
         mesh_name, ext = filename.split('.')
         Mesh.from_file(mesh_path, parent=world, material=material, name=mesh_name)
