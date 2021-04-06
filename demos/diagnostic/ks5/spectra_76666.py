@@ -17,7 +17,6 @@
 
 # External imports
 import matplotlib.pyplot as plt
-plt.ion()
 import numpy as np
 from scipy.constants import electron_mass, atomic_mass
 from jet.data import sal
@@ -66,27 +65,27 @@ DATA_PATH = '/pulse/{}/ppf/signal/{}/{}/{}:{}'
 user = 'cgiroud'
 sequence = 0
 
-psi_coord = sal.get(DATA_PATH.format(PULSE_PLASMA, user, 'PRFL', 'C6', sequence)).dimensions[0].data
+psi_coord = sal.get(DATA_PATH.format(PULSE_PLASMA, user, 'PRFL', 'C6', sequence)).dimensions[1].data
 mask = psi_coord <= 1.0
 psi_coord = psi_coord[mask]
 
-flow_velocity_tor_data = sal.get(DATA_PATH.format(PULSE_PLASMA, user, 'PRFL', 'VT', sequence)).data[mask]
+flow_velocity_tor_data = sal.get(DATA_PATH.format(PULSE_PLASMA, user, 'PRFL', 'VT', sequence)).data.squeeze()[mask]
 flow_velocity_tor_psi = Interpolate1DCubic(psi_coord, flow_velocity_tor_data)
 flow_velocity_tor = AxisymmetricMapper(Blend2D(Constant2D(0.0), IsoMapper2D(psin_2d, flow_velocity_tor_psi), inside_lcfs))
 flow_velocity = lambda x, y, z: Vector3D(y * flow_velocity_tor(x, y, z), - x * flow_velocity_tor(x, y, z), 0.) \
                                 / np.sqrt(x*x + y*y)
 
-ion_temperature_data = sal.get(DATA_PATH.format(PULSE_PLASMA, user, 'PRFL', 'TI', sequence)).data[mask]
+ion_temperature_data = sal.get(DATA_PATH.format(PULSE_PLASMA, user, 'PRFL', 'TI', sequence)).data.squeeze()[mask]
 print("Ti between {} and {} eV".format(ion_temperature_data.min(), ion_temperature_data.max()))
 ion_temperature_psi = Interpolate1DCubic(psi_coord, ion_temperature_data)
 ion_temperature = AxisymmetricMapper(Blend2D(Constant2D(0.0), IsoMapper2D(psin_2d, ion_temperature_psi), inside_lcfs))
 
-electron_density_data = sal.get(DATA_PATH.format(PULSE_PLASMA, user, 'PRFL', 'NE', sequence)).data[mask]
+electron_density_data = sal.get(DATA_PATH.format(PULSE_PLASMA, user, 'PRFL', 'NE', sequence)).data.squeeze()[mask]
 print("Ne between {} and {} m-3".format(electron_density_data.min(), electron_density_data.max()))
 electron_density_psi = Interpolate1DCubic(psi_coord, electron_density_data)
 electron_density = AxisymmetricMapper(Blend2D(Constant2D(0.0), IsoMapper2D(psin_2d, electron_density_psi), inside_lcfs))
 
-density_c6_data = sal.get(DATA_PATH.format(PULSE_PLASMA, user, 'PRFL', 'C6', sequence)).data[mask]
+density_c6_data = sal.get(DATA_PATH.format(PULSE_PLASMA, user, 'PRFL', 'C6', sequence)).data.squeeze()[mask]
 density_c6_psi = Interpolate1DCubic(psi_coord, density_c6_data)
 density_c6 = AxisymmetricMapper(Blend2D(Constant2D(0.0), IsoMapper2D(psin_2d, density_c6_psi), inside_lcfs))
 density_d = lambda x, y, z: electron_density(x, y, z) - 6 * density_c6(x, y, z)
@@ -120,6 +119,7 @@ print('Observation')
 
 ks5c = load_ks5_sightlines(PULSE, 'ks5c', parent=world)
 
+plt.ion()
 ks5c.observe()
 
 observed_radiance = []
@@ -156,3 +156,6 @@ plt.xlabel('Distance along beam line (m)')
 plt.ylabel('Beam component density')
 plt.legend()
 plt.title('Attenuation of beam components')
+plt.ioff()
+plt.show()
+
