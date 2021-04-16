@@ -672,10 +672,22 @@ JET_MESH = ANTENNAS + INNER_WALL_GUARD_LIMITERS + INNER_WALL_CLADDING_TILES + OP
            VACUUM_VESSEL + DIAGNOSTICS + IL_SC + IL_SC_STRUCTURE + DIVERTOR_TILES + DIVERTOR_STRUCTURE
 
 
-def import_jet_mesh(world, override_material=None, tungsten_material=None, beryllium_material=None,
+def import_jet_mesh(world, mesh_description=JET_MESH, override_material=None, tungsten_material=None, beryllium_material=None,
                     lambert_material=None, verbose=True):
+    """ Imports JET machine meshes.
 
-    for mesh_item in JET_MESH:
+    Args:
+        :param world: The parent node.
+        :param mesh_description: Optional, list of tupples of the shape (mesh file path, material). On default equals to the
+                                 JET_MESH list.
+        :param override_material: Optional, overrides materials specified in the mesh_description.
+        :param tungsten_material: Optional, overrides tungsten materials specified in mesh_description.
+        :param beryllium_material: Optional, overrides beryllium materials specified in mesh_description.
+        :param lambert_material: Optional, overrides Lambertian materials specified in mesh_description.
+        :param verbose: Sets the verbosity, defaults True.
+    """
+    
+    for mesh_item in mesh_description:
 
         mesh_path, default_material = mesh_item
 
