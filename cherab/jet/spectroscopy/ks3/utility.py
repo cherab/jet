@@ -15,7 +15,10 @@
 # See the Licence for the specific language governing permissions and limitations
 # under the Licence.
 
-from .polychromator import PolychromatorFilter, Polychromator, global_polychromator, array_polychromator
-from .polychromator import d_alpha_filter, baseline_523nm_filter, be_ii_527nm_filter, c_iii_465nm_filter, w_i_410nm_filter, he_i_668nm_filter, n_ii_567nm_filter
-from .spectrometer import CzernyTurnerSpectrometer, SurveySpectrometer, ksra, ksrb, ksrc, ksrd
-from .load_ks3_sightlines import load_ks3_inner_array, load_ks3_outer_array
+def reference_number(dictionary, number):
+    ref_number = -1
+    for num in dictionary.keys():
+        if ref_number < num <= number:
+            ref_number = num
+
+    return ref_number

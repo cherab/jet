@@ -21,6 +21,7 @@ from raysect.core import Point3D
 from cherab.tools.observers import FibreOpticGroup, SpectroscopicFibreOptic
 from .polychromator import array_polychromator, global_polychromator
 from .spectrometer import ksra, ksrb, ksrc, ksrd
+from .utility import reference_number
 
 
 LOS_ORIGIN = {'inner': [Point3D(-0.012, 3.3345, 3.58845) for i in range(10)],
@@ -82,23 +83,31 @@ KS3_INSTRUMENTS = {'inner': (array_polychromator, ksrc, ksrd),
                    'wide inner': (global_polychromator,),
                    'wide outer': (global_polychromator,)}
 
+
 def _load_ks3_array(pulse, array_type, instrument=None, fibre_names=None, parent=None):
+    """
+    Loads KS3 inner or outer lines of sight array.
 
-    first_supported_pulse = min(LOS_END[array_type].keys())
+    :param str array_type: 'inner' or 'outer'.
+    :param SpectroscopicInstrument instrument: One of the KS3 inner array instruments:
+                                               array_polychromator or ksrc or ksrd high-resolutoin
+                                               spectrometers.
+    :param list fibre_names: The list of fibre names to load. E.g., ['1', '3', '5'] will load only
+                             the 1st, 3rd and 5th sight lines.
+    :param Node parent: The parent node in the scenegraph.
+    """
 
-    if pulse < first_supported_pulse:
-        raise ValueError("Only shots >= {} are supported at this time.".format(first_supported_pulse))
+    oldest_supported_pulse = min(LOS_END[array_type].keys())
+
+    if pulse < oldest_supported_pulse:
+        raise ValueError("Only shots >= {} are supported at this time.".format(oldest_supported_pulse))
 
     array_type = array_type.lower()
 
     if array_type not in ('inner', 'outer'):
         raise ValueError("Array type {} is not supported. Choose between 'inner' and 'outer'.".format(array_type))
 
-    keys = sorted(LOS_END[array_type], reverse=True)
-    for key in keys:
-        if pulse >= key:
-            reference_pulse = key
-            break
+    reference_pulse = reference_number(LOS_END[array_type], pulse)
 
     fibre_group = FibreOpticGroup(parent=parent, name='KS3 {} array'.format(array_type))
 
@@ -138,10 +147,28 @@ def _load_ks3_array(pulse, array_type, instrument=None, fibre_names=None, parent
 
 
 def load_ks3_inner_array(pulse, instrument=None, fibre_names=None, parent=None):
+    """
+    Loads KS3 inner lines of sight array.
+
+    :param SpectroscopicInstrument instrument: One of the KS3 inner array instruments:
+                                               array_polychromator, ksrc and ksrd.
+    :param list fibre_names: The list of fibre names to load. E.g., ['1', '3', '5'] will load only
+                             the 1st, 3rd and 5th sight lines.
+    :param Node parent: The parent node in the scenegraph.
+    """
 
     return _load_ks3_array(pulse, 'inner', instrument=instrument, fibre_names=fibre_names, parent=parent)
 
 
 def load_ks3_outer_array(pulse, instrument=None, fibre_names=None, parent=None):
+    """
+    Loads KS3 outer lines of sight array.
+
+    :param SpectroscopicInstrument instrument: One of the KS3 outer array instruments:
+                                               array_polychromator, ksra and ksrb.
+    :param list fibre_names: The list of fibre names to load. E.g., ['1', '3', '5'] will load only
+                             the 1st, 3rd and 5th sight lines.
+    :param Node parent: The parent node in the scenegraph.
+    """
 
     return _load_ks3_array(pulse, 'outer', instrument=instrument, fibre_names=fibre_names, parent=parent)

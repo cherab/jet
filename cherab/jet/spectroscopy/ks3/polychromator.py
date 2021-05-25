@@ -23,26 +23,36 @@ from .instrument import SpectroscopicInstrument
 
 
 class PolychromatorFilter(InterpolatedSF):
+    """
+    Defines a symmetrical trapezoidal polychromator filter as a Raysect's InterpolatedSF.
 
-    def __init__(self, central_wavelength, window=3., plateau=None, name='', normalise=False):
+    :param float wavelength: Central wavelength of the filter in nm.
+    :param float window: Size of the filtering window in nm. Default is 3.
+    :param float flat_top: Size of the flat top part of the filter in nm.
+                           Default is None (equal to window).
+    :param str name: Filter name (e.g. "H-alpha filter"). Default is ''.
 
-        plateau = plateau or window - 1.e-15
-        if plateau > window:
-            raise ValueError('Plateau must be less or equal than window.')
-        if plateau == window:
-            plateau = window - 1.e-15
+    """
+
+    def __init__(self, wavelength, window=3., flat_top=None, name=''):
+
+        flat_top = flat_top or window - 1.e-15
+        if flat_top > window:
+            raise ValueError('flat_top must be less or equal than window.')
+        if flat_top == window:
+            flat_top = window - 1.e-15
 
         self.window = window
-        self.plateau = plateau
-        self.central_wavelength = central_wavelength
+        self.flat_top = flat_top
+        self.wavelength = wavelength
         self.name = name
 
-        wavelengths = [central_wavelength - 0.5 * window,
-                       central_wavelength - 0.5 * plateau,
-                       central_wavelength + 0.5 * plateau,
-                       central_wavelength + 0.5 * window]
+        wavelengths = [wavelength - 0.5 * window,
+                       wavelength - 0.5 * flat_top,
+                       wavelength + 0.5 * flat_top,
+                       wavelength + 0.5 * window]
         samples = [0, 1, 1, 0]
-        super().__init__(wavelengths, samples, normalise=normalise)
+        super().__init__(wavelengths, samples, normalise=False)
 
 
 d_alpha_filter = PolychromatorFilter(656.1, window=3., name='D alpha (PMT)')
@@ -61,6 +71,13 @@ n_ii_567nm_filter = PolychromatorFilter(567, window=3., name='N II 567 nm (PMT)'
 
 
 class Polychromator(SpectroscopicInstrument):
+    """
+    A polychromator assembly with a set of different filters.
+
+    :param list filters: List of the PolychromatorFilter instances.
+    :param int min_bins_per_window: Minimal number of spectral bins
+                                    per filtering window. Default is 10.
+    """
 
     def __init__(self, filters, min_bins_per_window=10):
         super().__init__()
@@ -69,6 +86,9 @@ class Polychromator(SpectroscopicInstrument):
 
     @property
     def min_bins_per_window(self):
+        """
+        Minimal number of spectral bins per filtering window. Default is 10.
+        """
         return self._min_bins_per_window
 
     @min_bins_per_window.setter
@@ -78,6 +98,9 @@ class Polychromator(SpectroscopicInstrument):
 
     @property
     def filters(self):
+        """
+        List of the PolychromatorFilter instances.
+        """
         return self._filters
 
     @filters.setter
@@ -97,8 +120,8 @@ class Polychromator(SpectroscopicInstrument):
         step = np.inf
         for poly_filter in self.filters:
             step = min(step, poly_filter.window / self.min_bins_per_window)
-            min_wavelength = min(min_wavelength, poly_filter.central_wavelength - 0.5 * poly_filter.window)
-            max_wavelength = max(max_wavelength, poly_filter.central_wavelength + 0.5 * poly_filter.window)
+            min_wavelength = min(min_wavelength, poly_filter.wavelength - 0.5 * poly_filter.window)
+            max_wavelength = max(max_wavelength, poly_filter.wavelength + 0.5 * poly_filter.window)
 
         self._min_wavelength = min_wavelength
         self._max_wavelength = max_wavelength

@@ -16,6 +16,10 @@
 # under the Licence.
 
 class SpectroscopicInstrument:
+    """
+    Base class for spectroscopic instruments (spectrometers, polychromators, etc.).
+    This is an abstract class.
+    """
 
     def __init__(self):
         self._clear_wavelength_settings()
@@ -23,9 +27,21 @@ class SpectroscopicInstrument:
 
     @property
     def pipeline_properties(self):
+        """
+        The list of properties (class, name, filter) of the pipelines used with
+        this instrument.
+        """
         return self._pipeline_properties
 
     def wavelength_settings(self, pulse):
+        """
+        Returns the lower and upper wavelength bound and the number of spectral bins
+        of this instrument.
+
+        :param int pulse: JET pulse number.
+
+        :return: (min_wavelength, max_wavelength, spectral_bins)
+        """
 
         if not self._pulse or pulse != self._pulse:
             self._set_wavelength(pulse)
