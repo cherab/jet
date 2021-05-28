@@ -16,78 +16,17 @@
 # under the Licence.
 
 import numpy as np
-from raysect.core import Point3D
 
 from cherab.tools.observers import FibreOpticGroup, SpectroscopicFibreOptic
-from .polychromator import array_polychromator, global_polychromator
-from .spectrometer import ksra, ksrb, ksrc, ksrd
 from .utility import reference_number
-
-
-LOS_ORIGIN = {'inner': [Point3D(-0.012, 3.3345, 3.58845) for i in range(10)],
-              'outer': [Point3D(-0.012, 2.7733, 3.606) for i in range(10)]}
-
-LOS_END = {'inner': {80124: [Point3D(-0.075, 2.228, -1.6),
-                             Point3D(-0.075, 2.273, -1.6),
-                             Point3D(-0.075, 2.315, -1.6),
-                             Point3D(-0.075, 2.363, -1.6),
-                             Point3D(-0.075, 2.409, -1.6),
-                             Point3D(-0.075, 2.453, -1.6),
-                             Point3D(-0.075, 2.498, -1.6),
-                             Point3D(-0.075, 2.542, -1.6),
-                             Point3D(-0.075, 2.586, -1.6),
-                             Point3D(-0.075, 2.631, -1.6)],
-                     94115: [Point3D(-0.075, 2.289, -1.6),
-                             Point3D(-0.075, 2.328, -1.6),
-                             Point3D(-0.075, 2.366, -1.6),
-                             Point3D(-0.075, 2.403, -1.6),
-                             Point3D(-0.075, 2.413, -1.6),
-                             Point3D(-0.075, 2.433, -1.6),
-                             Point3D(-0.075, 2.480, -1.6),
-                             Point3D(-0.075, 2.528, -1.6),
-                             Point3D(-0.075, 2.584, -1.6),
-                             Point3D(-0.075, 2.629, -1.6)]},
-           'outer': {80124: [Point3D(-0.075, 2.521, -1.6),
-                             Point3D(-0.075, 2.567, -1.6),
-                             Point3D(-0.075, 2.611, -1.6),
-                             Point3D(-0.075, 2.654, -1.6),
-                             Point3D(-0.075, 2.697, -1.6),
-                             Point3D(-0.075, 2.744, -1.6),
-                             Point3D(-0.075, 2.787, -1.6),
-                             Point3D(-0.075, 2.830, -1.6),
-                             Point3D(-0.075, 2.886, -1.6),
-                             Point3D(-0.075, 2.955, -1.6)],
-                     94115: [Point3D(0.075, 2.619, -1.6),
-                             Point3D(0.075, 2.664, -1.6),
-                             Point3D(0.075, 2.702, -1.6),
-                             Point3D(0.075, 2.743, -1.6),
-                             Point3D(0.075, 2.786, -1.6),
-                             Point3D(0.075, 2.830, -1.6),
-                             Point3D(0.075, 2.874, -1.6),
-                             Point3D(0.075, 2.910, -1.6),
-                             Point3D(0.075, 2.962, -1.6),
-                             Point3D(0.075, 3.019, -1.6)]}}
-
-LOS_ORIGIN_RADIUS = {'inner': [0.0165 for i in range(10)],
-                     'outer': [0.0165 for i in range(10)]}
-
-LOS_END_RADIUS = {'inner': [0.025 for i in range(10)],
-                  'outer': [0.025 for i in range(10)]}
-
-KS3_INSTRUMENTS = {'inner': (array_polychromator, ksrc, ksrd),
-                   'outer': (array_polychromator, ksra, ksrb),
-                   'bunker': (ksra, ksrb),
-                   'horizontal': (global_polychromator,),
-                   'horizontal limiter': (ksrb,),
-                   'vertical': (global_polychromator,),
-                   'wide inner': (global_polychromator,),
-                   'wide outer': (global_polychromator,)}
+from .sightline_parameters import KS3_LOS_PARAMETERS
 
 
 def _load_ks3_array(pulse, array_type, instrument=None, fibre_names=None, parent=None):
     """
     Loads KS3 inner or outer lines of sight array.
 
+    :param int pulse: JET pulse number.
     :param str array_type: 'inner' or 'outer'.
     :param SpectroscopicInstrument instrument: One of the KS3 inner array instruments:
                                                array_polychromator or ksrc or ksrd high-resolutoin
@@ -97,47 +36,51 @@ def _load_ks3_array(pulse, array_type, instrument=None, fibre_names=None, parent
     :param Node parent: The parent node in the scenegraph.
     """
 
-    oldest_supported_pulse = min(LOS_END[array_type].keys())
+    array_type = array_type.lower()
+    if array_type not in ('inner', 'outer'):
+        raise ValueError("Array type {} is not supported. Choose between 'inner' and 'outer'.".format(array_type))
+
+    parameters = KS3_LOS_PARAMETERS[array_type]
+
+    oldest_supported_pulse = min(parameters.keys())
 
     if pulse < oldest_supported_pulse:
         raise ValueError("Only shots >= {} are supported at this time.".format(oldest_supported_pulse))
 
-    array_type = array_type.lower()
-
-    if array_type not in ('inner', 'outer'):
-        raise ValueError("Array type {} is not supported. Choose between 'inner' and 'outer'.".format(array_type))
-
-    reference_pulse = reference_number(LOS_END[array_type], pulse)
+    reference_pulse = reference_number(parameters, pulse)
 
     fibre_group = FibreOpticGroup(parent=parent, name='KS3 {} array'.format(array_type))
 
-    for i in range(len(LOS_ORIGIN[array_type])):
+    origin = parameters[reference_pulse]['origin']
+    end = parameters[reference_pulse]['end']
+    origin_radius = parameters[reference_pulse]['origin_radius']
+    end_radius = parameters[reference_pulse]['end_radius']
+    instruments = parameters[reference_pulse]['instruments']
+
+    for i in range(len(origin)):
 
         fibre_name = '{}'.format(i + 1)
         if fibre_names and fibre_name not in fibre_names:
             print('Skipped', fibre_name)
             continue
 
-        fibre_direction = (LOS_ORIGIN[array_type][i].vector_to(LOS_END[array_type][reference_pulse][i]))
-        acceptance_angle = np.rad2deg(np.arctan2(LOS_END_RADIUS[array_type][i] - LOS_ORIGIN_RADIUS[array_type][i], fibre_direction.length))
+        fibre_direction = origin[i].vector_to(end[i])
+        acceptance_angle = np.rad2deg(np.arctan2(end_radius[i] - origin_radius[i], fibre_direction.length))
         fibre_direction_norm = fibre_direction.normalise()
-        fibre = SpectroscopicFibreOptic(LOS_ORIGIN[array_type][i], fibre_direction_norm, name=fibre_name,
-                                        acceptance_angle=acceptance_angle, radius=LOS_ORIGIN_RADIUS[array_type][i])
+        fibre = SpectroscopicFibreOptic(origin[i], fibre_direction_norm, name=fibre_name,
+                                        acceptance_angle=acceptance_angle, radius=origin_radius[i])
 
         fibre_group.add_sight_line(fibre)
 
     if instrument is None:
-        # fibre_group.display_progress = False
-        fibre_group.accumulate = False
 
         return fibre_group
 
-    if instrument not in KS3_INSTRUMENTS[array_type]:
-        raise ValueError("Only the following instruments are supported: {}. {} is given".format(KS3_INSTRUMENTS[array_type], instrument))
+    if instrument not in instruments:
+        intrument_names = ', '.join(instr.name for instr in instruments)
+        raise ValueError("Only the following instruments are supported: {}.".format(intrument_names))
 
     fibre_group.connect_pipelines(instrument.pipeline_properties)
-    fibre_group.accumulate = False
-    # fibre_group.display_progress = False
 
     (fibre_group.min_wavelength,
      fibre_group.max_wavelength,
@@ -150,6 +93,7 @@ def load_ks3_inner_array(pulse, instrument=None, fibre_names=None, parent=None):
     """
     Loads KS3 inner lines of sight array.
 
+    :param int pulse: JET pulse number.
     :param SpectroscopicInstrument instrument: One of the KS3 inner array instruments:
                                                array_polychromator, ksrc and ksrd.
     :param list fibre_names: The list of fibre names to load. E.g., ['1', '3', '5'] will load only
@@ -164,6 +108,7 @@ def load_ks3_outer_array(pulse, instrument=None, fibre_names=None, parent=None):
     """
     Loads KS3 outer lines of sight array.
 
+    :param int pulse: JET pulse number.
     :param SpectroscopicInstrument instrument: One of the KS3 outer array instruments:
                                                array_polychromator, ksra and ksrb.
     :param list fibre_names: The list of fibre names to load. E.g., ['1', '3', '5'] will load only
@@ -172,3 +117,105 @@ def load_ks3_outer_array(pulse, instrument=None, fibre_names=None, parent=None):
     """
 
     return _load_ks3_array(pulse, 'outer', instrument=instrument, fibre_names=fibre_names, parent=parent)
+
+
+def _load_ks3_single_los(pulse, los, instrument=None, parent=None):
+    """
+    Loads KS3 single line of sight.
+
+    :param int pulse: JET pulse number.
+    :param str los: KS3 line of sight: 'bunker', 'horizontal', 'horizontal limiter', 'vertical'.
+    :param SpectroscopicInstrument instrument: One of the KS3 spectroscopic instruments.
+    :param Node parent: The parent node in the scenegraph.
+    """
+
+    los = los.lower()
+    if los not in ('bunker', 'horizontal', 'horizontal limiter', 'vertical'):
+        raise ValueError("Line of sight {} is not supported."
+                         " Choose between 'bunker', 'horizontal', 'horizontal limiter' and 'vertical'.".format(los))
+
+    parameters = KS3_LOS_PARAMETERS[los]
+
+    oldest_supported_pulse = min(parameters.keys())
+
+    if pulse < oldest_supported_pulse:
+        raise ValueError("Only shots >= {} are supported at this time.".format(oldest_supported_pulse))
+
+    reference_pulse = reference_number(parameters, pulse)
+
+    origin = parameters[reference_pulse]['origin']
+    end = parameters[reference_pulse]['end']
+    origin_radius = parameters[reference_pulse]['origin_radius']
+    end_radius = parameters[reference_pulse]['end_radius']
+    instruments = parameters[reference_pulse]['instruments']
+
+    fibre_direction = origin.vector_to(end)
+    acceptance_angle = np.rad2deg(np.arctan2(end_radius - origin_radius, fibre_direction.length))
+    fibre_direction_norm = fibre_direction.normalise()
+    fibre = SpectroscopicFibreOptic(origin, fibre_direction_norm, name='KS3 {} view'.format(los),
+                                    acceptance_angle=acceptance_angle, radius=origin_radius, parent=parent)
+
+    if instrument is None:
+
+        return fibre
+
+    if instrument not in instruments:
+        intrument_names = ', '.join(instr.name for instr in instruments)
+        raise ValueError("Only the following instruments are supported: {}.".format(intrument_names))
+
+    fibre.connect_pipelines(instrument.pipeline_properties)
+
+    (fibre.min_wavelength,
+     fibre.max_wavelength,
+     fibre.spectral_bins) = instrument.wavelength_settings(pulse)
+
+    return fibre
+
+
+def load_ks3_bunker(pulse, instrument=None, parent=None):
+    """
+    Loads KS3 bunker line of sight.
+
+    :param int pulse: JET pulse number.
+    :param SpectroscopicInstrument instrument: One of the KS3 bunker instruments:
+                                               ksra or ksrb.
+    :param Node parent: The parent node in the scenegraph.
+    """
+
+    return _load_ks3_single_los(pulse, 'bunker', instrument=instrument, parent=parent)
+
+
+def load_ks3_horizontal(pulse, instrument=None, parent=None):
+    """
+    Loads KS3 horizontal line of sight.
+
+    :param int pulse: JET pulse number.
+    :param SpectroscopicInstrument instrument: global_polychromator or None.
+    :param Node parent: The parent node in the scenegraph.
+    """
+
+    return _load_ks3_single_los(pulse, 'horizontal', instrument=instrument, parent=parent)
+
+
+def load_ks3_horizontal_limiter(pulse, instrument=None, parent=None):
+    """
+    Loads KS3 horizontal limiter line of sight.
+
+    :param int pulse: JET pulse number.
+    :param SpectroscopicInstrument instrument: ksrb or None.
+    :param Node parent: The parent node in the scenegraph.
+    """
+
+    return _load_ks3_single_los(pulse, 'horizontal limiter', instrument=instrument, parent=parent)
+
+
+def load_ks3_vertical(pulse, instrument=None, parent=None):
+    """
+    Loads KS3 vertical line of sight.
+
+    :param int pulse: JET pulse number.
+    :param SpectroscopicInstrument instrument: global_polychromator or None.
+    :param Node parent: The parent node in the scenegraph.
+    """
+
+    return _load_ks3_single_los(pulse, 'vertical', instrument=instrument, parent=parent)

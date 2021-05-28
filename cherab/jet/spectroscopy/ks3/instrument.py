@@ -21,7 +21,8 @@ class SpectroscopicInstrument:
     This is an abstract class.
     """
 
-    def __init__(self):
+    def __init__(self, name):
+        self.name = name
         self._clear_wavelength_settings()
         self._pipeline_properties = None
 

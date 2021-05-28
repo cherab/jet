@@ -65,7 +65,6 @@ def plot_dalpha_emission(mesh, plasma, ks3_inner_array, ks3_outer_array):
     color = {ks3_inner_array: '0.5', ks3_outer_array: '1.0'}
     for los_array in (ks3_inner_array, ks3_outer_array):
         for sight_line in los_array.sight_lines:
-            points = []
             origin = sight_line.origin
             direction = sight_line.direction
             radius = sight_line.radius
@@ -86,6 +85,7 @@ def plot_dalpha_emission(mesh, plasma, ks3_inner_array, ks3_outer_array):
             ax.plot((ro, re), (zo, ze), ls='--', color=color[los_array], lw=0.75)
 
     return ax
+
 
 def load_ks3_pmt_array_data(pulse, time, signal, sequence=0, window=0.05):
     data = sal.get('/pulse/{}/ppf/signal/jetppf/edg8/{}:{}'.format(pulse, signal, sequence))
@@ -138,7 +138,7 @@ radiance_abs_wall = {}
 for los_array_type in ('inner', 'outer'):
     ks3[los_array_type].parent = world
     ks3[los_array_type].observe()
-    radiance_abs_wall[los_array_type] = [sightline.observed_spectrum(0).total() for sightline in ks3[los_array_type].sight_lines]
+    radiance_abs_wall[los_array_type] = [sightline.get_pipeline('D alpha (PMT)').value.mean for sightline in ks3[los_array_type].sight_lines]
 
 # ----Observing with reflections---- #
 
@@ -152,7 +152,7 @@ radiance_refl_wall = {}
 for los_array_type in ('inner', 'outer'):
     ks3[los_array_type].parent = world
     ks3[los_array_type].observe()
-    radiance_refl_wall[los_array_type] = [sightline.observed_spectrum(0).total() for sightline in ks3[los_array_type].sight_lines]
+    radiance_refl_wall[los_array_type] = [sightline.get_pipeline('D alpha (PMT)').value.mean for sightline in ks3[los_array_type].sight_lines]
 
 # ----Reading the experimental values---- #
 

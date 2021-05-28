@@ -79,8 +79,8 @@ class Polychromator(SpectroscopicInstrument):
                                     per filtering window. Default is 10.
     """
 
-    def __init__(self, filters, min_bins_per_window=10):
-        super().__init__()
+    def __init__(self, name, filters, min_bins_per_window=10):
+        super().__init__(name)
         self._min_bins_per_window = min_bins_per_window
         self.filters = filters
 
@@ -129,8 +129,9 @@ class Polychromator(SpectroscopicInstrument):
         self._pulse = pulse
 
 
-global_polychromator = Polychromator(filters=(d_alpha_filter, baseline_523nm_filter, be_ii_527nm_filter,
-                                              c_iii_465nm_filter, w_i_410nm_filter, he_i_668nm_filter, n_ii_567nm_filter))
+global_polychromator = Polychromator('global_polychromator', filters=(d_alpha_filter, baseline_523nm_filter, be_ii_527nm_filter,
+                                                                      c_iii_465nm_filter, w_i_410nm_filter, he_i_668nm_filter,
+                                                                      n_ii_567nm_filter))
 
-array_polychromator = Polychromator(filters=(d_alpha_filter, baseline_523nm_filter, be_ii_527nm_filter,
-                                             c_iii_465nm_filter, w_i_410nm_filter))
+array_polychromator = Polychromator('array_polychromator', filters=(d_alpha_filter, baseline_523nm_filter, be_ii_527nm_filter,
+                                                                    c_iii_465nm_filter, w_i_410nm_filter))

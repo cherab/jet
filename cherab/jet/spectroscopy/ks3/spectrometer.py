@@ -21,6 +21,7 @@ from raysect.optical.observer import SpectralRadiancePipeline0D
 
 from .instrument import SpectroscopicInstrument
 from .utility import reference_number
+from .instrument_parameters import KS3_SURVEY_PARAMETERS, KS3_CZERNY_TURNER_PARAMETERS
 
 
 class Spectrometer(SpectroscopicInstrument):
@@ -32,13 +33,20 @@ class Spectrometer(SpectroscopicInstrument):
     :param str jpf_node_profix: Prefix of the JPF node, e.g. 'SR' for KS3.
     :param str jpf_node_sequence: Sequence of the JPF node, e.g. '001' for KSRA,
                                   '002' for KSRB, '003' for KSRC, '004' for KSRD.
+    :param dict parameters: Spectrometer parameters are provided in the form
+                            {jpn1: parameters1, jpn2: parameters2, ..., jpnN: parametersN},
+                            where parameters1 are valid starting with the JET pulse number jpn1
+                            till the pulse number jpn2 and parametersN are valid starting with
+                            the pulse jpnN till now.
     """
 
-    def __init__(self, name, jpf_subsystem, jpf_node_prefix, jpf_node_sequence):
-        super().__init__()
+    def __init__(self, name, jpf_subsystem, jpf_node_prefix, jpf_node_sequence, parameters):
+        super().__init__(name)
         self._jpf_subsystem = jpf_subsystem
         self._jpf_node_prefix = jpf_node_prefix
         self._jpf_node_sequence = jpf_node_sequence
+        self._parameters = parameters
+        self._oldest_supported_pulse = min(self._parameters.keys())
         self._pipeline_properties = [(SpectralRadiancePipeline0D, name, None)]
 
     def reference_wavelength(self, pulse):
@@ -88,31 +96,20 @@ class CzernyTurnerSpectrometer(Spectrometer):
     :param str jpf_node_profix: Prefix of the JPF node, e.g. 'SR' for KS3.
     :param str jpf_node_sequence: Sequence of the JPF node, e.g. '002' for KSRB,
                                   '004' for KSRD.
-    :param dict m: Diffraction order.
-    :param dict focal_length: Focal length in nm.
-    :param dict dxdp: Pixel to pixel spacing on CCD in nm.
-    :param dict angle: Angle between incident and diffracted light in degrees.
-    :param dict reference_pixel: The pixel number that corresponds to the reference wavelength.
-                                 Default is None (central pixel).
+    :param dict parameters: Spectrometer parameters are provided in the form
+                            {jpn1: parameters1, jpn2: parameters2, ..., jpnN: parametersN},
+                            where parameters1 are valid starting with the JET pulse number jpn1
+                            till the pulse number jpn2 and parametersN are valid starting with
+                            the pulse jpnN till now.
+
+                            Each entry must contain the following parameters:
+                            'm': Diffraction order.
+                            'focal_length': Focal length in nm.
+                            'dxdp': Pixel to pixel spacing on CCD in nm.
+                            'angle': Angle between incident and diffracted light in degrees.
+                            'reference_pixel' (optional): The pixel number that corresponds
+                            to the reference wavelength.
     """
-
-    def __init__(self, name, jpf_subsystem, jpf_node_prefix, jpf_node_sequence, m, focal_length, dxdp, angle, reference_pixel=None):
-        super().__init__(name, jpf_subsystem, jpf_node_prefix, jpf_node_sequence)
-        self._m = m
-        self._focal_length = focal_length
-        self._dxdp = dxdp
-        self._angle = angle
-        self._reference_pixel = reference_pixel
-        self._min_pulse = self._oldest_supported_pulse()
-
-    def _oldest_supported_pulse(self):
-        pulse_min_fl = min(self._focal_length.keys())
-        pulse_min_m = min(self._m.keys())
-        pulse_min_dxdp = min(self._dxdp.keys())
-        pulse_min_angle = min(self._angle.keys())
-        pulse_min_rp = 0 if self._reference_pixel is None else min(self._reference_pixel.keys())
-
-        return max(pulse_min_fl, pulse_min_m, pulse_min_dxdp, pulse_min_angle, pulse_min_rp)
 
     def resolution(self, pulse, wavelength):
         """
@@ -128,10 +125,12 @@ class CzernyTurnerSpectrometer(Spectrometer):
                                                                          self._jpf_node_prefix, self._jpf_node_sequence)
         grating = sal.get(data_path).value * 1.e-6  # grating in nm-1
 
-        m = self._m[reference_number(self._m, pulse)]
-        dxdp = self._dxdp[reference_number(self._dxdp, pulse)]
-        angle = np.deg2rad(self._angle[reference_number(self._angle, pulse)])
-        fl = self._focal_length[reference_number(self._focal_length, pulse)]
+        reference_pulse = reference_number(self._parameters, pulse)
+
+        m = self._parameters[reference_pulse]['m']
+        dxdp = self._parameters[reference_pulse]['dxdp']
+        angle = self._parameters[reference_pulse]['angle']
+        fl = self._parameters[reference_pulse]['focal_length']
 
         p = 0.5 * m * grating * wavelength
         resolution = dxdp * (np.sqrt(np.cos(angle)**2 - p * p) - p * np.tan(angle)) / (m * fl * grating)
@@ -140,15 +139,17 @@ class CzernyTurnerSpectrometer(Spectrometer):
 
     def _set_wavelength(self, pulse):
 
-        if pulse < self._min_pulse:
-            raise ValueError("Only shots >= {} are supported for this spectrometer.".format(self._min_pulse))
+        if pulse < self._oldest_supported_pulse:
+            raise ValueError("Only shots >= {} are supported for this spectrometer.".format(self._oldest_supported_pulse))
 
         pixel_total = self.pixel_total(pulse)
 
-        if self._reference_pixel is None:
+        reference_pulse = reference_number(self._parameters, pulse)
+
+        if 'reference_pixel' not in self._parameters[reference_pulse] or self._parameters[reference_pulse]['reference_pixel'] is None:
             reference_pixel = pixel_total // 2
         else:
-            reference_pixel = self._reference_pixel[reference_number(self._reference_pixel, pulse)] or pixel_total // 2
+            reference_pixel = self._parameters[reference_pulse]['reference_pixel']
 
         reference_wavelength = self.reference_wavelength(pulse)
         pixeloff = self.pixel_off(pulse)
@@ -174,42 +175,35 @@ class SurveySpectrometer(Spectrometer):
     in the supported wavelength range. However, Raysect does not support
     the observers with variable spectral resolution.
 
-    The perameters of spectrometer are provided in the form
-    {jpn1: value1, jpn2: value2, ..., jpnN: valueN}, where value1
-    is valid starting with the JET pulse number jpn1 till the pulse number jpn2
-    and the valueN is valid starting with the pulse jpnN till now.
-
     :param str name: Spectrometer name.
     :param str jpf_subsystem: JPF subsystem, e.g. 'DD' for KS3.
     :param str jpf_node_profix: Prefix of the JPF node, e.g. 'SR' for KS3.
     :param str jpf_node_sequence: Sequence of the JPF node, e.g. '002' for KSRB,
                                   '004' for KSRD.
-    :param dict resolution: Spectrometer resolution in nm.
-    :param dict wavelength_0: Wavelength corresponding to the first pixel.
+    :param dict parameters: Spectrometer parameters are provided in the form
+                            {jpn1: parameters1, jpn2: parameters2, ..., jpnN: parametersN},
+                            where parameters1 are valid starting with the JET pulse number jpn1
+                            till the pulse number jpn2 and parametersN are valid starting with
+                            the pulse jpnN till now.
+
+                            Each entry must contain the following parameters:
+                            'resolution': Spectrometer resolution in nm.
+                            'first_pixel_wavelength': Wavelength corresponding to the first pixel.
     """
-    def __init__(self, name, jpf_subsystem, jpf_node_prefix, jpf_node_sequence, resolution, wavelength_0):
-        super().__init__(name, jpf_subsystem, jpf_node_prefix, jpf_node_sequence)
-        self._resolution = resolution
-        self._wavelength_0 = wavelength_0
-        self._min_pulse = self._oldest_supported_pulse()
-
-    def _oldest_supported_pulse(self):
-        pulse_min_res = min(self._resolution.keys())
-        pulse_min_wl = min(self._wavelength_0.keys())
-
-        return max(pulse_min_res, pulse_min_wl)
 
     def _set_wavelength(self, pulse):
 
-        if pulse < self._min_pulse:
-            raise ValueError("Only shots >= {} are supported for this spectrometer.".format(self._min_pulse))
+        if pulse < self._oldest_supported_pulse:
+            raise ValueError("Only shots >= {} are supported for this spectrometer.".format(self._oldest_supported_pulse))
 
         pixeloff = self.pixel_off(pulse)
         pixelon = self.pixel_on(pulse)
         pixeltotal = self.pixel_total(pulse)
 
-        resolution = self._resolution[reference_number(self._resolution, pulse)]
-        wavelength_0 = self._wavelength_0[reference_number(self._wavelength_0, pulse)]
+        reference_pulse = reference_number(self._parameters, pulse)
+
+        resolution = self._parameters[reference_pulse]['resolution']
+        wavelength_0 = self._parameters[reference_pulse]['first_pixel_wavelength']
 
         if resolution > 0:
             self._min_wavelength = pixeloff * resolution + wavelength_0
@@ -221,15 +215,10 @@ class SurveySpectrometer(Spectrometer):
         self._pulse = pulse
 
 
-ksra = SurveySpectrometer('ksra', 'dd', 'sr', '001', resolution={80124: 0.19042, 83901: 0.12951},
-                          wavelength_0={80124: 417.2448, 83901: 421.0998})
+ksra = SurveySpectrometer('ksra', 'dd', 'sr', '001', KS3_SURVEY_PARAMETERS['ksra'])
 
-ksrb = CzernyTurnerSpectrometer('ksrb', 'dd', 'sr', '002', m={80124: 1}, focal_length={80124: 0.999596e9, 85501: 0.99876298e9},
-                                dxdp={80124: 0.0225e6, 85501: 0.013e6}, angle={80124: 7.176090, 85501: 7.1812114},
-                                reference_pixel={80124: 362, 85501: 522})
+ksrb = CzernyTurnerSpectrometer('ksrb', 'dd', 'sr', '002', KS3_CZERNY_TURNER_PARAMETERS['ksrb'])
 
-ksrc = SurveySpectrometer('ksrc', 'dd', 'sr', '003', resolution={80124: -0.14202}, wavelength_0={80124: 570.36})
+ksrc = SurveySpectrometer('ksrc', 'dd', 'sr', '003', KS3_SURVEY_PARAMETERS['ksrc'])
 
-ksrd = CzernyTurnerSpectrometer('ksrd', 'dd', 'sr', '004', m={80124: 1}, focal_length={80124: 0.99706828e9},
-                                dxdp={80124: -0.013e6}, angle={80124: 7.2210486},
-                                reference_pixel=None)
+ksrd = CzernyTurnerSpectrometer('ksrd', 'dd', 'sr', '004', KS3_CZERNY_TURNER_PARAMETERS['ksrd'])
