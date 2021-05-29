@@ -35,7 +35,7 @@ KS3_INNER_ARRAY_PARAMETERS = {
                 Point3D(-0.075, 2.586, -1.6),
                 Point3D(-0.075, 2.631, -1.6)],
         'origin_radius': [0.0165 for i in range(10)],
-        'end_radius': [0.025 for i in range(10)],
+        'end_radius': [0.0225 for i in range(10)],
         'instruments': (array_polychromator, ksrc, ksrd)
     },
     94115: {
@@ -51,7 +51,7 @@ KS3_INNER_ARRAY_PARAMETERS = {
                 Point3D(-0.075, 2.584, -1.6),
                 Point3D(-0.075, 2.629, -1.6)],
         'origin_radius': [0.0165 for i in range(10)],
-        'end_radius': [0.025 for i in range(10)],
+        'end_radius': [0.0225 for i in range(10)],
         'instruments': (array_polychromator, ksrc, ksrd)
     }
 }
@@ -70,7 +70,7 @@ KS3_OUTER_ARRAY_PARAMETERS = {
                 Point3D(-0.075, 2.886, -1.6),
                 Point3D(-0.075, 2.955, -1.6)],
         'origin_radius': [0.0165 for i in range(10)],
-        'end_radius': [0.025 for i in range(10)],
+        'end_radius': [0.0225 for i in range(10)],
         'instruments': (array_polychromator, ksra, ksrb)
     },
     94115: {
@@ -86,7 +86,7 @@ KS3_OUTER_ARRAY_PARAMETERS = {
                 Point3D(0.075, 2.962, -1.6),
                 Point3D(0.075, 3.019, -1.6)],
         'origin_radius': [0.0165 for i in range(10)],
-        'end_radius': [0.025 for i in range(10)],
+        'end_radius': [0.0225 for i in range(10)],
         'instruments': (array_polychromator, ksra, ksrb)
     }
 }
