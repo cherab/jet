@@ -15,7 +15,6 @@
 # See the Licence for the specific language governing permissions and limitations
 # under the Licence.
 
-from .polychromator import PolychromatorFilter, Polychromator, global_polychromator, array_polychromator
-from .polychromator import d_alpha_filter, baseline_523nm_filter, be_ii_527nm_filter, c_iii_465nm_filter, w_i_410nm_filter, he_i_668nm_filter, n_ii_567nm_filter
-from .spectrometer import CzernyTurnerSpectrometer, SurveySpectrometer, ksra, ksrb, ksrc, ksrd
+from .instrument import global_polychromator, array_polychromator, ksra, ksrb, ksrc, ksrd
+from .instrument import d_alpha_filter, baseline_523nm_filter, be_ii_527nm_filter, c_iii_465nm_filter, w_i_410nm_filter, he_i_668nm_filter, n_ii_567nm_filter
 from .load_ks3_sightlines import load_ks3_inner_array, load_ks3_outer_array, load_ks3_bunker, load_ks3_horizontal, load_ks3_horizontal_limiter, load_ks3_vertical

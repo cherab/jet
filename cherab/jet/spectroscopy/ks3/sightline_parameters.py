@@ -17,8 +17,7 @@
 
 from raysect.core import Point3D
 
-from .polychromator import array_polychromator, global_polychromator
-from .spectrometer import ksra, ksrb, ksrc, ksrd
+from .instrument import array_polychromator, global_polychromator, ksra, ksrb, ksrc, ksrd
 
 
 KS3_INNER_ARRAY_PARAMETERS = {

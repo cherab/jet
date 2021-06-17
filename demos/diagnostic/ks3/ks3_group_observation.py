@@ -51,28 +51,23 @@ import_jet_mesh(world)
 
 # ----Loading diagnostics---- #
 
-# polychromator
-ks3_inner_poly = load_ks3_outer_array(pulse, instrument=array_polychromator, parent=world)
-ks3_inner_poly.pixel_samples = 5000
-
-# high-resolution spectrometer
-ks3_inner_hrs = load_ks3_outer_array(pulse, instrument=ksrb, parent=world)
-ks3_inner_hrs.pixel_samples = 5000
+# KS3 outer array with polychromator and KSRB high-resolution spectrometer
+ks3_outer = load_ks3_outer_array(pulse, instruments=[array_polychromator, ksrb], parent=world)
+ks3_outer.pixel_samples = 5000
 
 # ----Observing---- #
 
 plasma.parent = world
 
-ks3_inner_poly.observe()
-ks3_inner_hrs.observe()
+ks3_outer.observe()
 
 # ----Plotting the results---- #
 
-ks3_inner_poly.plot_total_signal('D alpha (PMT)')
+ks3_outer.plot_total_signal('array_polychromator: D alpha')
 
-ax = ks3_inner_hrs.plot_spectra('ksrb', in_photons=True)
+ax = ks3_outer.plot_spectra('ksrb', in_photons=True)
 ax.set_xlim(655.6, 656.6)
 
-ks3_inner_hrs.plot_total_signal('ksrb')
+ks3_outer.plot_total_signal('ksrb')
 
 plt.show()

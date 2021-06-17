@@ -15,45 +15,88 @@
 # See the Licence for the specific language governing permissions and limitations
 # under the Licence.
 
-class SpectroscopicInstrument:
-    """
-    Base class for spectroscopic instruments (spectrometers, polychromators, etc.).
-    This is an abstract class.
-    """
+from cherab.tools.observers.spectroscopy import PolychromatorFilter, Polychromator
+from cherab.jet.spectroscopy import JetCzernyTurnerSpectrometer, JetSurveySpectrometer
 
-    def __init__(self, name):
-        self.name = name
-        self._clear_wavelength_settings()
-        self._pipeline_properties = None
 
-    @property
-    def pipeline_properties(self):
-        """
-        The list of properties (class, name, filter) of the pipelines used with
-        this instrument.
-        """
-        return self._pipeline_properties
+KS3_SURVEY_PARAMETERS = {
+    'ksra': {
+        80124: {
+            'resolution': 0.1904294,
+            'reference_wavelength': 419.3879,
+            'reference_pixel': 10
+        },
+        83901: {
+            'resolution': 0.1295087,
+            'reference_wavelength': 421.2925,
+            'reference_pixel': 0
+        }
+    },
+    'ksrc': {
+        80124: {
+            'resolution': -0.1420387,
+            'reference_wavelength': 570.1735,
+            'reference_pixel': 0
+        }
+    }
+}
 
-    def wavelength_settings(self, pulse):
-        """
-        Returns the lower and upper wavelength bound and the number of spectral bins
-        of this instrument.
+KS3_CZERNY_TURNER_PARAMETERS = {
+    'ksrb': {
+        80124: {
+            'diffraction_order': 1,
+            'pixel_spacing': 2.25e4,
+            'focal_length': 0.999596e9,
+            'diffraction_angle': 7.176090,
+            'reference_pixel': None
+        },
+        85501: {
+            'diffraction_order': 1,
+            'pixel_spacing': 1.3e4,
+            'focal_length': 0.99876298e9,
+            'diffraction_angle': 7.1812114,
+            'reference_pixel': None
+        }
+    },
+    'ksrd': {
+        80124: {
+            'diffraction_order': 1,
+            'pixel_spacing': -1.3e4,
+            'focal_length': 0.99706828e9,
+            'diffraction_angle': 7.2210486,
+            'reference_pixel': None
+        }
+    }
+}
 
-        :param int pulse: JET pulse number.
 
-        :return: (min_wavelength, max_wavelength, spectral_bins)
-        """
+d_alpha_filter = PolychromatorFilter(656.1, window=3., name='D alpha')
 
-        if not self._pulse or pulse != self._pulse:
-            self._set_wavelength(pulse)
+baseline_523nm_filter = PolychromatorFilter(523, window=3., name='Bremsstrahlung 523 nm')
 
-        return self._min_wavelength, self._max_wavelength, self._spectral_bins
+be_ii_527nm_filter = PolychromatorFilter(527, window=3., name='Be II 527 nm')
 
-    def _set_wavelength(self, pulse):
-        raise NotImplementedError("To be defined in subclass.")
+c_iii_465nm_filter = PolychromatorFilter(465, window=3., name='C III 465 nm')
 
-    def _clear_wavelength_settings(self):
-        self._min_wavelength = None
-        self._max_wavelength = None
-        self._spectral_bins = None
-        self._pulse = None
+w_i_410nm_filter = PolychromatorFilter(410, window=3., name='W I 410 nm')
+
+he_i_668nm_filter = PolychromatorFilter(668, window=3., name='He I 668 nm')
+
+n_ii_567nm_filter = PolychromatorFilter(567, window=3., name='N II 567 nm')
+
+
+global_polychromator = Polychromator(filters=(d_alpha_filter, baseline_523nm_filter, be_ii_527nm_filter,
+                                              c_iii_465nm_filter, w_i_410nm_filter, he_i_668nm_filter,
+                                              n_ii_567nm_filter), name='global_polychromator')
+
+array_polychromator = Polychromator(filters=(d_alpha_filter, baseline_523nm_filter, be_ii_527nm_filter,
+                                             c_iii_465nm_filter, w_i_410nm_filter), name='array_polychromator')
+
+
+ksra = JetSurveySpectrometer('dd', 'sr', '001', KS3_SURVEY_PARAMETERS['ksra'], name='ksra')
+
+ksrb = JetCzernyTurnerSpectrometer('dd', 'sr', '002', KS3_CZERNY_TURNER_PARAMETERS['ksrb'], name='ksrb')
+
+ksrc = JetSurveySpectrometer('dd', 'sr', '003', KS3_SURVEY_PARAMETERS['ksrc'], name='ksrc')
+
+ksrd = JetCzernyTurnerSpectrometer('dd', 'sr', '004', KS3_CZERNY_TURNER_PARAMETERS['ksrd'], name='ksrd')
