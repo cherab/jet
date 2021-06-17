@@ -673,9 +673,24 @@ JET_MESH = ANTENNAS + INNER_WALL_GUARD_LIMITERS + INNER_WALL_CLADDING_TILES + OP
 
 
 def import_jet_mesh(world, override_material=None, tungsten_material=None, beryllium_material=None,
-                    lambert_material=None, verbose=True):
+                    lambert_material=None, verbose=True, mesh_components=JET_MESH):
+    """ Imports JET machine meshes.
 
-    for mesh_item in JET_MESH:
+    Args:
+        :param world: The parent node.
+        :param override_material: Optional, overrides materials specified in the mesh_description.
+        :param tungsten_material: Optional, overrides tungsten materials specified in mesh_description.
+        :param beryllium_material: Optional, overrides beryllium materials specified in mesh_description.
+        :param lambert_material: Optional, overrides Lambertian materials specified in mesh_description.
+        :param verbose: Sets the verbosity, defaults True.
+        :param mesh_components: Optional, list of tupples of the shape (mesh file path, material). On default equals to the
+                                 JET_MESH list.
+        :return: list of loaded mesh primitives.
+    """
+   
+    primitives = []
+    
+    for mesh_item in mesh_components:
 
         mesh_path, default_material = mesh_item
 
@@ -694,7 +709,9 @@ def import_jet_mesh(world, override_material=None, tungsten_material=None, beryl
             print("importing {}  ...".format(os.path.split(mesh_path)[1]))
         directory, filename = os.path.split(mesh_path)
         mesh_name, ext = filename.split('.')
-        Mesh.from_file(mesh_path, parent=world, material=material, name=mesh_name)
+        primitives.append(Mesh.from_file(mesh_path, parent=world, material=material, name=mesh_name))
+
+    return primitives
 
 
 ###########################
