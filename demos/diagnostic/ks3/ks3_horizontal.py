@@ -49,26 +49,10 @@ plasma.models = [ExcitationLine(d_alpha), RecombinationLine(d_alpha)]
 
 # ----Loading diagnostics---- #
 
-ks3_bunker = load_ks3_bunker(pulse, instrument=ksrb)
-ks3_horizontal_limiter = load_ks3_horizontal_limiter(pulse, instrument=ksrb)
+ks3_bunker = load_ks3_bunker(pulse, instruments=[ksrb])
+ks3_horizontal_limiter = load_ks3_horizontal_limiter(pulse, instruments=[ksrb])
 ks3_bunker.pixel_samples = 10000
 ks3_horizontal_limiter.pixel_samples = 10000
-
-# ----Observing without reflections---- #
-
-plt.ion()
-
-world = World()
-plasma.parent = world
-
-# loading wall mesh
-import_jet_mesh(world, override_material=AbsorbingSurface())
-
-radiance_abs_wall = {}
-for sightline in (ks3_bunker, ks3_horizontal_limiter):
-    sightline.parent = world
-    sightline.observe()
-    radiance_abs_wall[sightline] = sightline.get_pipeline('ksrb').samples.mean
 
 # ----Observing with reflections---- #
 
@@ -76,13 +60,25 @@ world = World()
 plasma.parent = world
 
 # loading wall mesh
-import_jet_mesh(world)
+jet_mesh = import_jet_mesh(world)
 
 radiance_refl_wall = {}
 for sightline in (ks3_bunker, ks3_horizontal_limiter):
     sightline.parent = world
     sightline.observe()
     radiance_refl_wall[sightline] = sightline.get_pipeline('ksrb').samples.mean
+
+# ----Observing without reflections---- #
+
+# changing wall material to AbsorbingSurface
+absorbing_surface = AbsorbingSurface()
+for mesh_component in jet_mesh:
+    mesh_component.material = absorbing_surface
+
+radiance_abs_wall = {}
+for sightline in (ks3_bunker, ks3_horizontal_limiter):
+    sightline.observe()
+    radiance_abs_wall[sightline] = sightline.get_pipeline('ksrb').samples.mean
 
 # ----Plotting the results---- #
 
@@ -102,5 +98,4 @@ for sightline in (ks3_bunker, ks3_horizontal_limiter):
     plt.title('D-alpha intensity on {} line of sight'.format(sightline.name))
     plt.xlim(655.4, 656.8)
 
-plt.ioff()
 plt.show()

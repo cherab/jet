@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from raysect.optical import World, Point3D, Vector3D, Spectrum
 from raysect.optical.material import AbsorbingSurface
-from jet.data import sal
+from sal.client import SALClient
 
 # Internal imports
 from cherab.core.utility import PhotonToJ
@@ -31,6 +31,9 @@ from cherab.openadas import OpenADAS
 from cherab.solps import load_solps_from_mdsplus
 from cherab.jet.machine import import_jet_mesh
 from cherab.jet.spectroscopy.ks3 import load_ks3_inner_array, load_ks3_outer_array, array_polychromator
+
+
+sal = SALClient('https://sal.jet.uk')
 
 
 def plot_dalpha_emission(mesh, plasma, ks3_inner_array, ks3_outer_array):
@@ -62,9 +65,8 @@ def plot_dalpha_emission(mesh, plasma, ks3_inner_array, ks3_outer_array):
 
     # plot lines of sight
     length = 5.5
-    color = {ks3_inner_array: '0.5', ks3_outer_array: '1.0'}
-    for los_array in (ks3_inner_array, ks3_outer_array):
-        for sight_line in los_array.sight_lines:
+    for (los_group, color) in ((ks3_inner_array, '0.5'), (ks3_outer_array, '1.0')):
+        for sight_line in los_group.sight_lines:
             origin = sight_line.origin
             direction = sight_line.direction
             radius = sight_line.radius
@@ -80,9 +82,9 @@ def plot_dalpha_emission(mesh, plasma, ks3_inner_array, ks3_outer_array):
             rl = (ro - radius * np.cos(theta), re - radius_end * np.cos(theta))
             zr = (zo + radius * np.sin(theta), ze + radius_end * np.sin(theta))
             zl = (zo - radius * np.sin(theta), ze - radius_end * np.sin(theta))
-            ax.plot(rr, zr, color=color[los_array], lw=0.75)
-            ax.plot(rl, zl, color=color[los_array], lw=0.75)
-            ax.plot((ro, re), (zo, ze), ls='--', color=color[los_array], lw=0.75)
+            ax.plot(rr, zr, color=color, lw=0.75)
+            ax.plot(rl, zl, color=color, lw=0.75)
+            ax.plot((ro, re), (zo, ze), ls='--', color=color, lw=0.75)
 
     return ax
 
@@ -115,30 +117,16 @@ plasma.models = [ExcitationLine(d_alpha), RecombinationLine(d_alpha)]
 
 # ----Loading diagnostics---- #
 
-ks3 = {'inner': load_ks3_inner_array(pulse, instrument=array_polychromator),
-       'outer': load_ks3_outer_array(pulse, instrument=array_polychromator)}
-ks3['inner'].pixel_samples = 5000
-ks3['outer'].pixel_samples = 5000
+ks3_inner = load_ks3_inner_array(pulse, instruments=[array_polychromator])
+ks3_outer = load_ks3_outer_array(pulse, instruments=[array_polychromator])
+ks3_inner.pixel_samples = 5000
+ks3_outer.pixel_samples = 5000
 
 # ----Plotting H-alpha emissivity and diagnostic geometry---- #
 
 plt.ion()
-ax = plot_dalpha_emission(sim.mesh, plasma, ks3['inner'], ks3['outer'])
+ax = plot_dalpha_emission(sim.mesh, plasma, ks3_inner, ks3_outer)
 ax.set_title('D-alpha emissivity (SOLPS #{} + ADAS),\nJET Pulse No. {}, time {} s'.format(ref_number, pulse, time))
-
-# ----Observing without reflections---- #
-
-world = World()
-plasma.parent = world
-
-# loading wall mesh
-import_jet_mesh(world, override_material=AbsorbingSurface())
-
-radiance_abs_wall = {}
-for los_array_type in ('inner', 'outer'):
-    ks3[los_array_type].parent = world
-    ks3[los_array_type].observe()
-    radiance_abs_wall[los_array_type] = [sightline.get_pipeline('D alpha (PMT)').value.mean for sightline in ks3[los_array_type].sight_lines]
 
 # ----Observing with reflections---- #
 
@@ -146,33 +134,46 @@ world = World()
 plasma.parent = world
 
 # loading wall mesh
-import_jet_mesh(world)
+jet_mesh = import_jet_mesh(world)
 
+pipeline_name = 'array_polychromator: D alpha'
 radiance_refl_wall = {}
-for los_array_type in ('inner', 'outer'):
-    ks3[los_array_type].parent = world
-    ks3[los_array_type].observe()
-    radiance_refl_wall[los_array_type] = [sightline.get_pipeline('D alpha (PMT)').value.mean for sightline in ks3[los_array_type].sight_lines]
+for los_group in (ks3_inner, ks3_outer):
+    los_group.parent = world
+    los_group.observe()
+    radiance_refl_wall[los_group] = [sightline.get_pipeline(pipeline_name).value.mean for sightline in los_group.sight_lines]
+
+# ----Observing without reflections---- #
+
+# changing wall material to AbsorbingSurface
+absorbing_surface = AbsorbingSurface()
+for mesh_component in jet_mesh:
+    mesh_component.material = absorbing_surface
+
+radiance_abs_wall = {}
+for los_group in (ks3_inner, ks3_outer):
+    los_group.observe()
+    radiance_abs_wall[los_group] = [sightline.get_pipeline(pipeline_name).value.mean for sightline in los_group.sight_lines]
 
 # ----Reading the experimental values---- #
 
 radiance_exp = {}
-for los_array_type in ('inner', 'outer'):
-    radiance_photon = load_ks3_pmt_array_data(pulse, time, 'da{}'.format(los_array_type[0]))
-    radiance_exp[los_array_type] = PhotonToJ.to(radiance_photon, plasma.atomic_data.wavelength(deuterium, 0, (3, 2)))
+for (los_group, signal_name) in ((ks3_inner, 'dai'), (ks3_outer, 'dao')):
+    radiance_photon = load_ks3_pmt_array_data(pulse, time, signal_name)
+    radiance_exp[los_group] = PhotonToJ.to(radiance_photon, plasma.atomic_data.wavelength(deuterium, 0, (3, 2)))
 
 # ----Plotting the results---- #
 
-for los_array_type in ('inner', 'outer'):
+for los_group in (ks3_inner, ks3_outer):
     plt.figure()
-    plt.plot(np.arange(1, 11), radiance_exp[los_array_type], color='k', ls='none', marker='s', mfc='none', label='Experiment')
-    plt.plot(np.arange(1, 11), radiance_refl_wall[los_array_type], ls='none', marker='x', label='SOLPS with reflections')
-    plt.plot(np.arange(1, 11), radiance_abs_wall[los_array_type], ls='none', marker='o', mfc='none', label='SOLPS without reflections')
+    plt.plot(np.arange(1, 11), radiance_exp[los_group], color='k', ls='none', marker='s', mfc='none', label='Experiment')
+    plt.plot(np.arange(1, 11), radiance_refl_wall[los_group], ls='none', marker='x', label='SOLPS with reflections')
+    plt.plot(np.arange(1, 11), radiance_abs_wall[los_group], ls='none', marker='o', mfc='none', label='SOLPS without reflections')
     plt.text(0.97, 0.97, 'Pulse: {}\ntime: {} s'.format(pulse, time), transform=plt.gca().transAxes, ha='right', va='top')
     plt.legend(loc=2, frameon=False)
     plt.xlabel('Sight-line index')
     plt.ylabel('Observed Radiance, W sr-1 m-2')
-    plt.title('D-alpha radiance across KS3 {} sight-lines'.format(los_array_type))
+    plt.title('D-alpha radiance on {} lines of sight'.format(los_group.name))
 
 plt.ioff()
 plt.show()
