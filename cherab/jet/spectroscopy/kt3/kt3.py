@@ -15,7 +15,7 @@ from cherab.tools.observers.spectroscopy import SpectroscopicFibreOptic
 # empirically determined point limiting the inner sightlines
 KT3_INNER_THRESHOLD = Point2D(3.0510967354232994, 2.0072688526617264)
 
-def kt3_from_data(spectrometer, origin_rz, spots_rz, min_wavelength, max_wavelength, spectral_bins, pixel_samples=1e3,
+def load_kt3_from_data(spectrometer, origin_rz, spots_rz, min_wavelength, max_wavelength, spectral_bins, pixel_samples=1e3,
                   toroidal_angle=303.75, parent=None):
     """
     Method returning sightlines of KT3 diagnostic as a FibreOpticGroup.
@@ -70,8 +70,8 @@ def kt3_from_data(spectrometer, origin_rz, spots_rz, min_wavelength, max_wavelen
 
     return group
 
-def kt3_from_sal(spectrometer, pulse_number,min_wavelength=None, max_wavelength=None, spectral_bins=None,
-                 spot_position_correction=True, pulse_time=None, time_selection="nearest",
+def load_kt3(spectrometer, pulse_number,min_wavelength=None, max_wavelength=None, spectral_bins=None,
+                 spot_position_correction=False, pulse_time=None, time_selection="nearest",
                  pixel_samples=1000, prevent_blocking=True, inner_threshold=None, parent=None):
     """
     Returns a FibreOpticGroup of observers approximating KT3 sightlines based on ppf data obtained through SAL.
@@ -95,12 +95,12 @@ def kt3_from_sal(spectrometer, pulse_number,min_wavelength=None, max_wavelength=
     :param float max_wavelength: Maximum observed wavelength to be used instead of the value provided in ppfs.
     :param int spectral_bins: Number of spectral bins
     :param bool spot_position_correction: If True, the radial spot position correction will be applied. If true, the 
-      pulse_time parameter has to be passed.
+      pulse_time parameter has to be passed. (default False)
     :param float pulse_time: Shot time to apply the radial spot position for.
     :param str time_selection: Selects the method the correction time will be selected with. If "precise", then the
       pulse_time value is matched exactly to the time values in the kt3s/shfm signal. If "nearest", then the nearest
       value to the value passed as pulse_time is provided (default "nearest").
-    :param int pixel_samples: Number of sample rays to be used for every sight-line
+    :param int pixel_samples: Number of sample rays to be used for every sight-line. (default 10000)
     :param bool prevent_blocking: If true, the position of the origin is shifted to avoid blocking of the inner sight-lines (default True).
     :param Point2D inner_threshold: The point setting the lowest (min(z)) outer most (max(r)) point of the limiting structure. Sight-line origins
       will be moved otwards to avoid blocking.
@@ -177,7 +177,7 @@ def kt3_from_sal(spectrometer, pulse_number,min_wavelength=None, max_wavelength=
         origin_rz = [origin_point.x, origin_point.y]
 
 
-    return kt3_from_data(spectrometer, origin_rz, spots_rz, min_wavelength, max_wavelength, spectral_bins, pixel_samples, toroidal_angle,
+    return load_kt3_from_data(spectrometer, origin_rz, spots_rz, min_wavelength, max_wavelength, spectral_bins, pixel_samples, toroidal_angle,
                          parent)
 
 def determine_inner_blockpoint(origin_rz, spot_rz_reference, parent, precision=1e-4, inner_sightline=0,
@@ -329,7 +329,7 @@ def _determine_limitig_point(origin_rz, spot_rz_reference, parent, precision=1e-
         spot_rz[0, :] += spot_shift
         spot_rz[1, :] = tile5_interp(spot_rz[0, :])
 
-        kt3 = kt3_from_data(origin_rz, spot_rz, min_wavelength=390, max_wavelength=412, bins_wavelength=1000, parent=parent)
+        kt3 = load_kt3_from_data(origin_rz, spot_rz, min_wavelength=390, max_wavelength=412, bins_wavelength=1000, parent=parent)
         hi, _, _ = calculate_spot_position_sightline(kt3.sight_lines[inner_sightline])
         ho, _, _ = calculate_spot_position_sightline(kt3.sight_lines[outer_sightline])
         hit_inner.append(hi)
