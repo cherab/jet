@@ -1,5 +1,5 @@
 
-# Copyright 2014-2017 United Kingdom Atomic Energy Authority
+# Copyright 2014-2021 United Kingdom Atomic Energy Authority
 #
 # Licensed under the EUPL, Version 1.1 or – as soon they will be approved by the
 # European Commission - subsequent versions of the EUPL (the "Licence");
@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from raysect.optical import World, Point3D, Vector3D, Spectrum
 from raysect.optical.material import AbsorbingSurface
-from sal.client import SALClient
+from jet.data import sal
 
 # Internal imports
 from cherab.core.utility import PhotonToJ
@@ -31,9 +31,6 @@ from cherab.openadas import OpenADAS
 from cherab.solps import load_solps_from_mdsplus
 from cherab.jet.machine import import_jet_mesh
 from cherab.jet.spectroscopy.ks3 import load_ks3_inner_array, load_ks3_outer_array, array_polychromator
-
-
-sal = SALClient('https://sal.jet.uk')
 
 
 def plot_dalpha_emission(mesh, plasma, ks3_inner_array, ks3_outer_array):

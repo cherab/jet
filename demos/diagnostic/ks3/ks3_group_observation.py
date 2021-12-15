@@ -1,5 +1,5 @@
 
-# Copyright 2014-2017 United Kingdom Atomic Energy Authority
+# Copyright 2014-2021 United Kingdom Atomic Energy Authority
 #
 # Licensed under the EUPL, Version 1.1 or – as soon they will be approved by the
 # European Commission - subsequent versions of the EUPL (the "Licence");
@@ -71,3 +71,4 @@ ax.set_xlim(655.6, 656.6)
 ks3_outer.plot_total_signal('ksrb')
 
 plt.show()
+

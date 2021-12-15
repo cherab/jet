@@ -1,5 +1,5 @@
 
-# Copyright 2014-2017 United Kingdom Atomic Energy Authority
+# Copyright 2014-2021 United Kingdom Atomic Energy Authority
 #
 # Licensed under the EUPL, Version 1.1 or – as soon they will be approved by the
 # European Commission - subsequent versions of the EUPL (the "Licence");
@@ -146,3 +146,4 @@ KS3_LOS_PARAMETERS = {
     'horizontal limiter': KS3_HORIZONTAL_LIMITER_PARAMETERS,
     'vertical': KS3_VERTICAL_PARAMETERS
 }
+

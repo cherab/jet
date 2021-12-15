@@ -1,5 +1,5 @@
 
-# Copyright 2014-2017 United Kingdom Atomic Energy Authority
+# Copyright 2014-2021 United Kingdom Atomic Energy Authority
 #
 # Licensed under the EUPL, Version 1.1 or – as soon they will be approved by the
 # European Commission - subsequent versions of the EUPL (the "Licence");
@@ -18,7 +18,7 @@
 # External imports
 import matplotlib.pyplot as plt
 import numpy as np
-from raysect.optical import World
+from raysect.optical import World, Spectrum
 from raysect.optical.material import AbsorbingSurface
 
 # Internal imports
@@ -51,6 +51,8 @@ plasma.models = [ExcitationLine(d_alpha), RecombinationLine(d_alpha)]
 
 ks3_bunker = load_ks3_bunker(pulse, instruments=[ksrb])
 ks3_horizontal_limiter = load_ks3_horizontal_limiter(pulse, instruments=[ksrb])
+ks3_bunker.accumulate = False
+ks3_horizontal_limiter.accumulate = False
 ks3_bunker.pixel_samples = 10000
 ks3_horizontal_limiter.pixel_samples = 10000
 
@@ -66,7 +68,9 @@ radiance_refl_wall = {}
 for sightline in (ks3_bunker, ks3_horizontal_limiter):
     sightline.parent = world
     sightline.observe()
-    radiance_refl_wall[sightline] = sightline.get_pipeline('ksrb').samples.mean
+    spectrum = Spectrum(ksrb.min_wavelength, ksrb.max_wavelength, ksrb.spectral_bins)
+    spectrum.samples[:] = sightline.get_pipeline('ksrb').samples.mean
+    radiance_refl_wall[sightline], = ksrb.calibrate(spectrum)
 
 # ----Observing without reflections---- #
 
@@ -78,13 +82,13 @@ for mesh_component in jet_mesh:
 radiance_abs_wall = {}
 for sightline in (ks3_bunker, ks3_horizontal_limiter):
     sightline.observe()
-    radiance_abs_wall[sightline] = sightline.get_pipeline('ksrb').samples.mean
+    spectrum.samples[:] = sightline.get_pipeline('ksrb').samples.mean
+    radiance_abs_wall[sightline], = ksrb.calibrate(spectrum)
 
 # ----Plotting the results---- #
 
 for sightline in (ks3_bunker, ks3_horizontal_limiter):
-    wavelength = np.linspace(sightline.min_wavelength, sightline.max_wavelength, sightline.spectral_bins + 1)
-    wavelength = 0.5 * (wavelength[1:] + wavelength[:-1])
+    wavelength, = ksrb.wavelengths
     signal_share = 100 * radiance_abs_wall[sightline].sum() / radiance_refl_wall[sightline].sum()
     plt.figure()
     plt.plot(wavelength, radiance_refl_wall[sightline], color='k', label='Total signal')
