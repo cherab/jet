@@ -7,7 +7,7 @@ with open("README.md") as f:
 
 setup(
     name="cherab-jet",
-    version="1.1.0dev1",
+    version="1.1.0.dev1",
     license="EUPL 1.1",
     namespace_packages=["cherab"],
     description="Cherab spectroscopy framework: JET machine submodule",
