@@ -1,0 +1,2 @@
+recursive-include cherab *.json *.csv *.pro
+prune demos
