@@ -1,0 +1,7 @@
+*.log
+*.npy
+__pycache__
+*.pickle
+*.egg-info
+build
+dist
