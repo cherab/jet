@@ -28,6 +28,7 @@ from cherab.core.utility import PhotonToJ
 from cherab.core.atomic import Line, deuterium
 from cherab.core.model import ExcitationLine, RecombinationLine
 from cherab.openadas import OpenADAS
+from cherab.tools.observers.group.plotting import select_pipelines
 from cherab.solps import load_solps_from_mdsplus
 from cherab.jet.machine import import_jet_mesh
 from cherab.jet.spectroscopy.ks3 import load_ks3_inner_array, load_ks3_outer_array, array_polychromator
@@ -63,24 +64,32 @@ def plot_dalpha_emission(mesh, plasma, ks3_inner_array, ks3_outer_array):
     # plot lines of sight
     length = 5.5
     for (los_group, color) in ((ks3_inner_array, '0.5'), (ks3_outer_array, '1.0')):
-        for sight_line in los_group.sight_lines:
-            origin = sight_line.origin
-            direction = sight_line.direction
+        for sight_line in los_group.observers:
+            origin = sight_line.transform * Point3D(0, 0, 0)
+            direction = sight_line.transform * Vector3D(0, 0, 1)
             radius = sight_line.radius
-            angle = np.deg2rad(sight_line.acceptance_angle)
-            end = origin + length * direction
-            radius_end = radius + np.tan(angle) * length
+            dir_r = -np.sqrt(direction.x * direction.x + direction.y * direction.y)
+            dir_z = direction.z
+            obs_angle = np.arctan2(dir_z, dir_r)
+            acc_angle = np.deg2rad(sight_line.acceptance_angle)
+            shift_r_plus = -radius * np.sin(obs_angle)
+            shift_z_plus = radius * np.cos(obs_angle)
+            shift_r_minus = radius * np.sin(obs_angle)
+            shift_z_minus = -radius * np.cos(obs_angle)
+            dir_r_plus = np.cos(obs_angle + acc_angle)
+            dir_z_plus = np.sin(obs_angle + acc_angle)
+            dir_r_minus = np.cos(obs_angle - acc_angle)
+            dir_z_minus = np.sin(obs_angle - acc_angle)
             ro = np.sqrt(origin.x**2 + origin.y**2)
             zo = origin.z
-            re = np.sqrt(end.x**2 + end.y**2)
-            ze = end.z
-            theta = 0.5 * np.pi - np.arctan2(zo - ze, ro - re)
-            rr = (ro + radius * np.cos(theta), re + radius_end * np.cos(theta))
-            rl = (ro - radius * np.cos(theta), re - radius_end * np.cos(theta))
-            zr = (zo + radius * np.sin(theta), ze + radius_end * np.sin(theta))
-            zl = (zo - radius * np.sin(theta), ze - radius_end * np.sin(theta))
-            ax.plot(rr, zr, color=color, lw=0.75)
-            ax.plot(rl, zl, color=color, lw=0.75)
+            re = ro + dir_r * length
+            ze = zo + dir_z * length
+            rplus = (ro + shift_r_plus, ro + shift_r_plus + dir_r_plus * length)
+            rminus = (ro + shift_r_minus, ro + shift_r_minus + dir_r_minus * length)
+            zplus = (zo + shift_z_plus, zo + shift_z_plus + dir_z_plus * length)
+            zminus = (zo + shift_z_minus, zo + shift_z_minus + dir_z_minus * length)
+            ax.plot(rplus, zplus, color=color, lw=0.75)
+            ax.plot(rminus, zminus, color=color, lw=0.75)
             ax.plot((ro, re), (zo, ze), ls='--', color=color, lw=0.75)
 
     return ax
@@ -138,7 +147,8 @@ radiance_refl_wall = {}
 for los_group in (ks3_inner, ks3_outer):
     los_group.parent = world
     los_group.observe()
-    radiance_refl_wall[los_group] = [sightline.get_pipeline(pipeline_name).value.mean for sightline in los_group.sight_lines]
+    pipelines, _ = select_pipelines(los_group, pipeline_name)
+    radiance_refl_wall[los_group] = [pipeline.value.mean for pipeline in pipelines]
 
 # ----Observing without reflections---- #
 
@@ -150,7 +160,8 @@ for mesh_component in jet_mesh:
 radiance_abs_wall = {}
 for los_group in (ks3_inner, ks3_outer):
     los_group.observe()
-    radiance_abs_wall[los_group] = [sightline.get_pipeline(pipeline_name).value.mean for sightline in los_group.sight_lines]
+    pipelines, _ = select_pipelines(los_group, pipeline_name)
+    radiance_abs_wall[los_group] = [pipeline.value.mean for pipeline in pipelines]
 
 # ----Reading the experimental values---- #
 

@@ -94,4 +94,3 @@ ksrb = JetCzernyTurnerSpectrometer('dd', 'sr', '002', KS3_CZERNY_TURNER_PARAMETE
 ksrc = JetSurveySpectrometer('dd', 'sr', '003', KS3_SURVEY_PARAMETERS['ksrc'], name='ksrc')
 
 ksrd = JetCzernyTurnerSpectrometer('dd', 'sr', '004', KS3_CZERNY_TURNER_PARAMETERS['ksrd'], name='ksrd')
-

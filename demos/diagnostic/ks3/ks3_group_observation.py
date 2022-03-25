@@ -23,6 +23,7 @@ from raysect.optical import World
 from cherab.core.atomic import Line, deuterium
 from cherab.core.model import ExcitationLine, RecombinationLine
 from cherab.openadas import OpenADAS
+from cherab.tools.observers.group.plotting import plot_group_total, plot_group_spectra
 from cherab.solps import load_solps_from_mdsplus
 from cherab.jet.machine import import_jet_mesh
 from cherab.jet.spectroscopy.ks3 import load_ks3_outer_array, array_polychromator, ksrb
@@ -63,12 +64,11 @@ ks3_outer.observe()
 
 # ----Plotting the results---- #
 
-ks3_outer.plot_total_signal('array_polychromator: D alpha')
+plot_group_total(ks3_outer, item='array_polychromator: D alpha')
 
-ax = ks3_outer.plot_spectra('ksrb', in_photons=True)
+ax = plot_group_spectra(ks3_outer, item='ksrb', in_photons=True)
 ax.set_xlim(655.6, 656.6)
 
-ks3_outer.plot_total_signal('ksrb')
+plot_group_total(ks3_outer, item='ksrb')
 
 plt.show()
-

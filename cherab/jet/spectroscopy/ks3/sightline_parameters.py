@@ -146,4 +146,3 @@ KS3_LOS_PARAMETERS = {
     'horizontal limiter': KS3_HORIZONTAL_LIMITER_PARAMETERS,
     'vertical': KS3_VERTICAL_PARAMETERS
 }
-

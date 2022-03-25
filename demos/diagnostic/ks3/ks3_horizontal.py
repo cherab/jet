@@ -17,7 +17,6 @@
 
 # External imports
 import matplotlib.pyplot as plt
-import numpy as np
 from raysect.optical import World, Spectrum
 from raysect.optical.material import AbsorbingSurface
 
@@ -51,8 +50,8 @@ plasma.models = [ExcitationLine(d_alpha), RecombinationLine(d_alpha)]
 
 ks3_bunker = load_ks3_bunker(pulse, instruments=[ksrb])
 ks3_horizontal_limiter = load_ks3_horizontal_limiter(pulse, instruments=[ksrb])
-ks3_bunker.accumulate = False
-ks3_horizontal_limiter.accumulate = False
+ks3_bunker.pipelines[0].accumulate = False
+ks3_horizontal_limiter.pipelines[0].accumulate = False
 ks3_bunker.pixel_samples = 10000
 ks3_horizontal_limiter.pixel_samples = 10000
 
@@ -69,7 +68,7 @@ for sightline in (ks3_bunker, ks3_horizontal_limiter):
     sightline.parent = world
     sightline.observe()
     spectrum = Spectrum(ksrb.min_wavelength, ksrb.max_wavelength, ksrb.spectral_bins)
-    spectrum.samples[:] = sightline.get_pipeline('ksrb').samples.mean
+    spectrum.samples[:] = sightline.pipelines[0].samples.mean
     radiance_refl_wall[sightline], = ksrb.calibrate(spectrum)
 
 # ----Observing without reflections---- #
@@ -82,7 +81,7 @@ for mesh_component in jet_mesh:
 radiance_abs_wall = {}
 for sightline in (ks3_bunker, ks3_horizontal_limiter):
     sightline.observe()
-    spectrum.samples[:] = sightline.get_pipeline('ksrb').samples.mean
+    spectrum.samples[:] = sightline.pipelines[0].samples.mean
     radiance_abs_wall[sightline], = ksrb.calibrate(spectrum)
 
 # ----Plotting the results---- #

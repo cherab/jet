@@ -17,7 +17,9 @@
 
 import numpy as np
 
-from cherab.tools.observers import FibreOpticGroup, SpectroscopicFibreOptic
+from raysect.core import translate, rotate_basis, Vector3D
+from raysect.optical.observer import FibreOptic
+from cherab.tools.observers import FibreOpticGroup
 from cherab.jet.spectroscopy.utility import reference_number
 from .sightline_parameters import KS3_LOS_PARAMETERS
 
@@ -61,16 +63,20 @@ def _load_ks3_array(pulse, array_type, instruments=None, fibre_names=None, paren
 
         fibre_name = '{}'.format(i + 1)
         if fibre_names and fibre_name not in fibre_names:
-            print('Skipped', fibre_name)
+            print('Skipped ', fibre_name)
             continue
 
         fibre_direction = origin[i].vector_to(end[i])
         acceptance_angle = np.rad2deg(np.arctan2(end_radius[i] - origin_radius[i], fibre_direction.length))
-        fibre_direction_norm = fibre_direction.normalise()
-        fibre = SpectroscopicFibreOptic(origin[i], fibre_direction_norm, name=fibre_name,
-                                        acceptance_angle=acceptance_angle, radius=origin_radius[i])
+        direction = fibre_direction.normalise()
+        if direction.x != 0 or direction.y != 0 or direction.z != 1:
+            up = Vector3D(0, 0, 1)
+        else:
+            up = Vector3D(1, 0, 0)
+        transform = translate(origin[i].x, origin[i].y, origin[i].z) * rotate_basis(direction, up)
+        fibre = FibreOptic(acceptance_angle=acceptance_angle, radius=origin_radius[i], name=fibre_name, transform=transform)
 
-        fibre_group.add_sight_line(fibre)
+        fibre_group.add_observer(fibre)
 
     if instruments is None or not len(instruments):
 
@@ -79,19 +85,21 @@ def _load_ks3_array(pulse, array_type, instruments=None, fibre_names=None, paren
     min_wavelength = np.inf
     max_wavelength = 0
     bin_width = np.inf
-    pipeline_properties = []
+    pipeline_classes = []
+    pipeline_kwargs = []
     for instrument in instruments:
         if instrument not in supported_instruments:
             intrument_names = ', '.join(instr.name for instr in supported_instruments)
             raise ValueError("Only the following instruments are supported: {}.".format(intrument_names))
 
         instrument.pulse = pulse  # does nothing if polychromator
-        pipeline_properties += instrument.pipeline_properties
+        pipeline_classes += instrument.pipeline_classes
+        pipeline_kwargs += instrument.pipeline_kwargs
         min_wavelength = min(instrument.min_wavelength, min_wavelength)
         max_wavelength = max(instrument.max_wavelength, max_wavelength)
         bin_width = min((instrument.max_wavelength - instrument.min_wavelength) / instrument.spectral_bins, bin_width)
 
-    fibre_group.connect_pipelines(pipeline_properties)
+    fibre_group.connect_pipelines(pipeline_classes, pipeline_kwargs)
     fibre_group.min_wavelength = min_wavelength
     fibre_group.max_wavelength = max_wavelength
     fibre_group.spectral_bins = int(np.ceil((max_wavelength - min_wavelength) / bin_width))
@@ -221,9 +229,13 @@ def _load_ks3_single_los(pulse, los, instruments=None, parent=None):
 
     fibre_direction = origin.vector_to(end)
     acceptance_angle = np.rad2deg(np.arctan2(end_radius - origin_radius, fibre_direction.length))
-    fibre_direction_norm = fibre_direction.normalise()
-    fibre = SpectroscopicFibreOptic(origin, fibre_direction_norm, name='KS3 {} view'.format(los),
-                                    acceptance_angle=acceptance_angle, radius=origin_radius, parent=parent)
+    direction = fibre_direction.normalise()
+    if direction.x != 0 or direction.y != 0 or direction.z != 1:
+        up = Vector3D(0, 0, 1)
+    else:
+        up = Vector3D(1, 0, 0)
+    transform = translate(origin.x, origin.y, origin.z) * rotate_basis(direction, up)
+    fibre = FibreOptic(acceptance_angle=acceptance_angle, radius=origin_radius, parent=parent, name='KS3 {} view'.format(los), transform=transform)
 
     if instruments is None or not len(instruments):
 
@@ -232,19 +244,19 @@ def _load_ks3_single_los(pulse, los, instruments=None, parent=None):
     min_wavelength = np.inf
     max_wavelength = 0
     bin_width = np.inf
-    pipeline_properties = []
+    pipelines = []
     for instrument in instruments:
         if instrument not in supported_instruments:
             intrument_names = ', '.join(instr.name for instr in supported_instruments)
             raise ValueError("Only the following instruments are supported: {}.".format(intrument_names))
 
         instrument.pulse = pulse  # does nothing if polychromator
-        pipeline_properties += instrument.pipeline_properties
+        pipelines += instrument.create_pipelines()
         min_wavelength = min(instrument.min_wavelength, min_wavelength)
         max_wavelength = max(instrument.max_wavelength, max_wavelength)
         bin_width = min((instrument.max_wavelength - instrument.min_wavelength) / instrument.spectral_bins, bin_width)
 
-    fibre.connect_pipelines(pipeline_properties)
+    fibre.pipelines = pipelines
     fibre.min_wavelength = min_wavelength
     fibre.max_wavelength = max_wavelength
     fibre.spectral_bins = int(np.ceil((max_wavelength - min_wavelength) / bin_width))
@@ -390,4 +402,3 @@ def load_ks3_vertical(pulse, instruments=None, parent=None):
     """
 
     return _load_ks3_single_los(pulse, 'vertical', instruments=instruments, parent=parent)
-

@@ -18,7 +18,6 @@
 import numpy as np
 
 from jet.data import sal
-from raysect.optical.observer import SpectralRadiancePipeline0D
 from cherab.tools.spectroscopy import Spectrometer, CzernyTurnerSpectrometer
 from .utility import reference_number
 
@@ -116,7 +115,7 @@ class JetCzernyTurnerSpectrometer(CzernyTurnerSpectrometer):
         self.pixel_spacing = abs(pixel_spacing)
         self.diffraction_angle = self._parameters[reference_pulse]['diffraction_angle']
         self.focal_length = self._parameters[reference_pulse]['focal_length']
-        
+
         min_wavelength = reference_wavelength
         for i in range(reference_pixel, pixeloff - 1, -1):
             min_wavelength = min_wavelength - self.resolution(min_wavelength)
@@ -126,11 +125,7 @@ class JetCzernyTurnerSpectrometer(CzernyTurnerSpectrometer):
 
 class JetSurveySpectrometer(Spectrometer):
     """
-    JET survey spectrometer with a constant spectral resolution.
-
-    Note: survey spectrometers usually have non-constant spectral resolution
-    in the supported wavelength range. However, Raysect does not support
-    the observers with variable spectral resolution.
+    JET survey spectrometer.
 
     :param str jpf_subsystem: JPF subsystem, e.g. 'DD' for KS3.
     :param str jpf_node_prefix: Prefix of the JPF node, e.g. 'SR' for KS3.
@@ -212,4 +207,3 @@ class JetSurveySpectrometer(Spectrometer):
             wavelength_to_pixel = wavelength_to_pixel[::-1]
 
         return wavelength_to_pixel
-
