@@ -186,12 +186,7 @@ class JETEquilibrium:
         if value < array.min() or value > array.max():
             raise IndexError("Requested value is outside the range of the data.")
 
-        index = np.searchsorted(array, value, side="left")
-
-        if (value - array[index])**2 < (value - array[index + 1])**2:
-            return index
-        else:
-            return index + 1
+        return np.argmin(np.abs(array - value))
 
     def _process_points(self, index):
 
