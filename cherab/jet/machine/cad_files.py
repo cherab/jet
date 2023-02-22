@@ -29,9 +29,12 @@ try:
 except KeyError:
     if os.path.isdir('/projects/cadmesh/'):
         CADMESH_PATH = '/projects/cadmesh/'
+    elif os.path.isdir('/common/cadmesh'):  # on JDC computers
+        CADMESH_PATH = '/common/cadmesh'
     else:
-        raise ValueError("CHERAB's CAD file path environment variable 'CHERAB_CADMESH' is"
-                         "not set.")
+        raise ValueError("Can't find '/projects/cadmesh' or '/common/cadmesh': please set the "
+                         "CHERAB_CADMESH environment variable to point to the directory "
+                         "which contains JET's RSM mesh files.")
 
 
 tungsten_roughness = 0.29
