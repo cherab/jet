@@ -9,9 +9,20 @@ from cherab.tools.observers import load_calcam_calibration
 from cherab.tools.inversions import ToroidalVoxelGrid
 
 
-def load_kl11_camera(parent=None, pipelines=None, stride=1):
+def load_kl11_camera(parent=None, pipelines=None, stride=1,
+                     calibration_file = '/home/mcarr/cherab/cherab_jet/cherab/jet/cameras/kl11/KL11-E1DC_87516.nc'):
+    """
+    Load Camera calibration fron an *.nc file.
 
-    camera_config = load_calcam_calibration('/home/mcarr/cherab/cherab_jet/cherab/jet/cameras/kl11/KL11-E1DC_87516.nc')
+    :param parent: Parent of the camera observer
+    :param pipeline: Camera pipelines
+    :param stride: Binning parameter, only every nth pixel from the calibration is used
+    :param configuration_file: Path to the camera calibration file
+
+    return
+    """
+
+    camera_config = load_calcam_calibration(calibration_file)
 
     if not pipelines:
         power_unfiltered = PowerPipeline2D(display_unsaturated_fraction=0.96, name="Unfiltered Power (W)")
