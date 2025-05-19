@@ -19,7 +19,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.constants import electron_mass, atomic_mass
-from jet.data import sal
 from raysect.core import Point3D, Vector3D, translate, rotate_basis
 from raysect.optical import World
 from raysect.optical.observer import PinholeCamera
@@ -35,6 +34,7 @@ from cherab.openadas import OpenADAS
 from cherab.jet.nbi import load_pini_from_ppf
 from cherab.jet.equilibrium import JETEquilibrium
 from cherab.jet.machine import import_jet_mesh
+from cherab.jet.sal import sal
 
 
 PULSE = 79666

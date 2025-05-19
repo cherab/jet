@@ -24,7 +24,7 @@ import numpy as np
 from raysect.core import Point2D
 from cherab.tools.equilibrium import EFITEquilibrium
 
-from jet.data import sal
+from cherab.jet.sal import sal
 from sal.core.exception import NodeNotFound
 
 

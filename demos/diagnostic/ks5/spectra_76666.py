@@ -19,7 +19,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.constants import electron_mass, atomic_mass
-from jet.data import sal
 from raysect.core import Vector3D
 from raysect.optical import World
 
@@ -31,6 +30,7 @@ from cherab.core.model import SingleRayAttenuator, BeamCXLine
 from cherab.openadas import OpenADAS
 from cherab.jet.nbi import load_pini_from_ppf
 from cherab.jet.equilibrium import JETEquilibrium
+from cherab.jet.sal import sal
 from cherab.jet.spectroscopy.ks5 import load_ks5_sightlines
 
 
