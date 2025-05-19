@@ -15,3 +15,4 @@
 # under the Licence.
 
 from .equilibrium import *
+from .sal import sal
