@@ -64,7 +64,7 @@ z = (z_offset + 0.5 * raytransfer_material.dz) + raytransfer_material.dz * np.ar
 
 jet_firstwall = firstwall()
 
-_, ax = plt.subplots(1, 2)
+_, ax = plt.subplots(1, 2,constrained_layout=True, figsize=(12, 5))
 ax[0].pcolormesh(r, z, contrib_kb3h03.sum(axis=1))
 ax[0].plot(jet_firstwall[:, 0], jet_firstwall[:, 1], 'w-')
 ax[0].set_ylim(None, -1.0)
@@ -73,6 +73,9 @@ ax[0].set_xlabel(r"$R$ [m]")
 ax[0].set_ylabel(r"$Z$ [m]")
 ax[0].set_aspect('equal')
 ax[0].set_title("KB3H03")
+ax[0].tick_params(axis='both', which='major', labelsize=14)
+ax[0].xaxis.label.set_size(14)
+ax[0].yaxis.label.set_size(14)
 
 ax[1].pcolormesh(r, z, contrib_kb3h04.sum(axis=1))
 ax[1].plot(jet_firstwall[:, 0], jet_firstwall[:, 1], 'w-')
@@ -82,5 +85,8 @@ ax[1].set_aspect('equal')
 ax[1].set_title("KB3H04")
 ax[1].set_xlabel(r"$R$ [m]")
 ax[1].set_ylabel(r"$Z$ [m]")
+ax[1].tick_params(axis='both', which='major', labelsize=14)
+ax[1].xaxis.label.set_size(14) 
+ax[1].yaxis.label.set_size(14)
 
 plt.show()
