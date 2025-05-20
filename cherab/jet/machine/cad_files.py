@@ -722,3 +722,5 @@ def import_jet_mesh(world, override_material=None, tungsten_material=None, beryl
 
 KB5V = [(os.path.join(CADMESH_PATH, 'jet/rsm/diagnostics/KB5/KB5V/kb5v.obj'), RoughTungsten(tungsten_roughness))]
 KB5H = [(os.path.join(CADMESH_PATH, 'jet/rsm/diagnostics/KB5/KB5H/kb5h.obj'), RoughTungsten(tungsten_roughness))]
+KB3H03 = [(os.path.join(CADMESH_PATH, 'jet/rsm/diagnostics/KB3/KB3H/kb3h03.rsm'), RoughTungsten(tungsten_roughness))]
+KB3H04 = [(os.path.join(CADMESH_PATH, 'jet/rsm/diagnostics/KB3/KB3H/kb3h04.rsm'), RoughTungsten(tungsten_roughness))]
