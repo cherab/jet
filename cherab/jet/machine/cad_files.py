@@ -27,12 +27,10 @@ from raysect.optical.library.metal import RoughTungsten, RoughBeryllium, RoughIr
 try:
     CADMESH_PATH = os.environ['CHERAB_CADMESH']
 except KeyError:
-    if os.path.isdir('/projects/cadmesh/'):
-        CADMESH_PATH = '/projects/cadmesh/'
-    elif os.path.isdir('/common/cadmesh'):  # on JDC computers
+    if os.path.isdir('/common/cadmesh'):
         CADMESH_PATH = '/common/cadmesh'
     else:
-        raise ValueError("Can't find '/projects/cadmesh' or '/common/cadmesh': please set the "
+        raise ValueError("Can't find '/common/cadmesh': please set the "
                          "CHERAB_CADMESH environment variable to point to the directory "
                          "which contains JET's RSM mesh files.")
 
