@@ -27,8 +27,3 @@ dependencies = [
 
 [project.urls]
 Tracker = "https://github.com/cherab/jet/issues"
-
-[tool.setuptools]
-packages = ["cherab"]
-package-dir = {"" = "."}
-include-package-data = true
