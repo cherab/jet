@@ -15,4 +15,11 @@
 # See the Licence for the specific language governing permissions and limitations
 # under the Licence.
 
-from .spectrometer import JetCzernyTurnerSpectrometer, JetSurveySpectrometer
+def reference_number(dictionary, number):
+    ref_number = -1
+    for num in dictionary.keys():
+        if ref_number < num <= number:
+            ref_number = num
+
+    return ref_number
+
