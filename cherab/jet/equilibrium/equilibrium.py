@@ -24,7 +24,7 @@ import numpy as np
 from raysect.core import Point2D
 from cherab.tools.equilibrium import EFITEquilibrium
 
-from cherab.jet.sal import sal
+from cherab.jet.sal import JETSALClient
 from sal.core.exception import NodeNotFound
 
 
@@ -46,6 +46,7 @@ class JETEquilibrium:
 
         DDA_PATH = '/pulse/{}/ppf/signal/{}/{}:{}'
         DATA_PATH = '/pulse/{}/ppf/signal/{}/{}/{}:{}'
+        sal = JETSALClient()
 
         # defaults
         user = user or 'jetppf'
