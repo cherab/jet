@@ -15,4 +15,4 @@
 # under the Licence.
 
 from .equilibrium import *
-from .sal import sal
+from .sal import JETSALClient, get_jet_sal
